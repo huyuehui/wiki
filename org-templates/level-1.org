@@ -1,0 +1,4 @@
+#+AUTHOR: Hu YueHui
+#+EMAIL: redxiii at 163.com
+#+STARTUP: showall
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/code.css"></link>

@@ -1,0 +1,161 @@
+#+TITLE: 解析mpv的升级脚本文件“update”
+#+KEYWORDS: mpv
+#+INCLUDE: ../org-templates/level-1.org
+
+* update脚本的内容
+  #+BEGIN_SRC sh
+    #!/bin/sh
+    
+    do_submodules()
+    {
+            set -ex
+            echo >&2 "Executing: git submodule sync"
+            git submodule sync
+            echo >&2 "Executing: git submodule update --init"
+            git submodule update --init
+    }
+    
+    do_gitmaster()
+    {
+            set -ex
+            git submodule foreach 'git checkout master'
+            git submodule foreach 'git pull --rebase'
+            git submodule foreach 'git remote prune origin'
+    }
+    
+    do_releasetag_submodule()
+    {
+            (
+                    cd "$1"
+                    version=`git tag | grep "^$2[0-9]" | sort -V | tail -n 1`
+                    git checkout --detach refs/tags/"$version"
+            )
+    }
+    
+    do_releasetag()
+    {
+            set -ex
+            git submodule foreach 'git fetch'
+            git submodule foreach 'git remote prune origin'
+            do_releasetag_submodule ffmpeg  'n'
+            do_releasetag_submodule fribidi ''
+            do_releasetag_submodule libass  ''
+            do_releasetag_submodule mpv     'v'
+    }
+    
+    if [ x"$1" != x"--skip-selfupdate" ]; then
+            (
+                    set -ex
+                    git pull --rebase
+            )
+            exec "$0" --skip-selfupdate "$@"
+    fi
+    shift
+    
+    case "$1" in
+            --submodule|'')
+                    do_submodules
+                    ;;
+            --master)
+                    do_gitmaster
+                    ;;
+            --release)
+                    do_releasetag
+                    ;;
+            ,*)
+                    echo >&2 "$0 --submodule"
+                    echo >&2 "$0 --master"
+                    echo >&2 "$0 --release"
+                    exit 0
+                    ;;
+    esac
+  #+END_SRC
+
+* 脚本分析
+  1. /set/ [fn:source]
+
+     set - set or unset options and positional parameters
+
+     /-e/
+
+     When this option is on, if a simple command fails for any of the reasons  listed  in  Consequences  of Shell Errors or returns an exit status value >0, and is not part of the compound list  fol‐ lowing  a  while,  until, or if keyword, and is not a part of an AND or OR list, and is not a pipeline preceded by the ! reserved word, then the shell shall immediately exit.
+
+     /-x/
+
+     The shell shall write to standard error a trace for each command after it expands the command and before it executes  it.  It  is unspecified  whether  the  command  that  turns  tracing  off is traced.
+
+  2. />&2/
+
+     临时重定向至标准错误输出
+
+  3. /git submodule sync/ [fn:source]
+
+     Synchronizes submodules' remote URL configuration setting to the value specified in .gitmodules. It will only affect those submodules which already have a URL entry in .git/config (that is the case when they are initialized or freshly added). This is useful when submodule URLs change upstream and you need to update your local repositories accordingly.
+
+     "git submodule sync" synchronizes all submodules while "git submodule sync -- A" synchronizes submodule "A" only.
+
+  4. /git submodule update ~--init~/ [fn:source]
+
+     Update the registered submodules, i.e. clone missing submodules and checkout the commit specified in the index of the containing repository. This will make the submodules HEAD be detached unless ~--rebase~ or ~--merge~ is specified or the key submodule.$name.update is set to rebase, merge or none.  none can be overridden by specifying ~--checkout~. Setting the key submodule.$name.update to !command will cause command to be run.  command can be any arbitrary shell command that takes a single argument, namely the sha1 to update to.
+
+     If the submodule is not yet initialized, and you just want to use the setting as stored in .gitmodules, you can automatically initialize the submodule with the ~--init~ option.
+
+  5. /git submodule foreach/ [fn:source]
+
+     Evaluates an arbitrary shell command in each checked out submodule. The command has access to the variables $name, $path, $sha1 and $toplevel: $name is the name of the relevant submodule section in .gitmodules, $path is the name of the submodule directory relative to the superproject, $sha1 is the commit as recorded in the superproject, and $toplevel is the absolute path to the top-level of the superproject. Any submodules defined in the superproject but not checked out are ignored by this command. Unless given ~--quiet~, foreach prints the name of each submodule before evaluating the command. If ~--recursive~ is given, submodules are traversed recursively (i.e. the given shell command is evaluated in nested submodules as well). A non-zero return from the command in any submodule causes the processing to terminate. This can be overridden by adding || : to the end of the command.
+
+     As an example, git submodule foreach 'echo $path `git rev-parse HEAD`' will show the path and currently checked out commit for each submodule.
+
+  6. /git pull ~--rebase~/ [fn:source]
+
+     Rebase the current branch on top of the upstream branch after fetching. If there is a remote-tracking branch corresponding to the upstream branch and the upstream branch was rebased since last fetched, the rebase uses that information to avoid rebasing non-local changes.
+
+     See pull.rebase, branch.<name>.rebase and branch.autosetuprebase in git-config if you want to make git pull always use ~--rebase~ instead of merging.
+
+     Note: This is a potentially dangerous mode of operation. It rewrites history, which does not bode well when you published that history already. Do not use this option unless you have read git-rebase carefully.
+
+     如果本地没有merge历史的话， ~--rebase~ 应该优先使用，否则可能会丢失本地的merge commit。参考[fn:git1] [fn:git2]
+
+  7. /git remote prune <name>/
+
+     Deletes all stale remote-tracking branches under <name>. These stale branches have already been removed from the remote repository referenced by <name>, but are still locally available in "remotes/<name>".
+
+     With ~--dry-run~ option, report what branches will be pruned, but do not actually prune them.
+
+  8. /sort -V/ [fn:source]
+
+     -V, --version-sort
+     natural sort of (version) numbers within text
+
+  9. /git checkout --detach [<branch>]/
+
+     /git checkout <commit>/
+
+     Prepare to work on top of <commit>, by detaching HEAD at it (see "DETACHED HEAD" section), and updating the index and the files in the working tree. Local modifications to the files in the working tree are kept, so that the resulting working tree will be the state recorded in the commit plus the local modifications.
+
+     Passing ~--detach~ forces this behavior in the case of a <branch> (without the option, giving a branch name to the command would check out the branch, instead of detaching HEAD at it), or the current commit, if no <branch> is specified.
+
+  10. 这段的作用是选择是否升级mpv-build。
+      #+BEGIN_SRC sh
+	# x"..."是为了配合[...]，避免后面字符串以"-"开头，可能被解释为test命令，从而提高脚本向其他POSIX Shell的移植性。
+	# 只考虑Bash的话，可以直接使用[[ $1 != "--skip-selfupdate" ]]。
+	if [ x"$1" != x"--skip-selfupdate" ]; then
+	   (
+		set -ex
+		git pull --rebase
+	   )
+	   # $0 为程序名， $@ 为参数列表。
+	   exec "$0" --skip-selfupdate "$@"
+	fi
+	# 参数列表左移一个，即 $2 -> $1 等， $0 不变。
+	shift		  
+      #+END_SRC
+
+* Footnotes
+
+[fn:source] From manpages.
+
+[fn:git1] "Version Control With Git", Chapter 10: Altering Commits, Page 171-176
+
+[fn:git2] [[http://www.derekgourlay.com/archives/428]["Git - When to Merge vs. When to Rebase"]]
+
