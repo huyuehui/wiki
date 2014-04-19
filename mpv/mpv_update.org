@@ -1,6 +1,6 @@
 #+TITLE: 解析mpv的升级脚本文件“update”
 #+KEYWORDS: mpv
-#+INCLUDE: ../org-templates/level-1.org
+#+SETUPFILE: ../org-templates/level-1.org
 
 * update脚本的内容
   #+BEGIN_SRC sh
