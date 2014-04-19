@@ -163,7 +163,7 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
 
 * Footnotes
 
-[fn:el-get] [[https://github.com/dimitri/el-get][El-Get's README.md]]
+[fn:el-get] Mostly copy&paste from [[https://github.com/dimitri/el-get][El-Get's README.md]]
 
 [fn:html_config] [[http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html][Publishing Org-mode files to HTML]]
 
