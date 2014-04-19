@@ -77,7 +77,7 @@ The easiest way to setup a given package is to add its initialization code to a 
   My Workspace: =~/work/wiki/=, it looks like:
   #+BEGIN_SRC emacs-lisp :results output :exports results
     (setq level 0)
-    
+
     (defun walk-path-visitor (is-dir path)
       "Called by walk-path for each file found"
       (cond ((eq is-dir t)
@@ -85,38 +85,39 @@ The easiest way to setup a given package is to add its initialization code to a 
              (print-path path))
             (t
              (print-path (file-name-nondirectory path)))))
-    
+
     (defun print-path (path)
       "Print path to standard-output"
       (princ (format "%s%s" (make-string level ? ) path))
       (terpri))
-    
+
     (defun walk-path (dir action)
-           "walk DIR executing ACTION with (dir file)"
-           (cond ((file-directory-p dir)
-                  (or (char-equal ?/ (aref dir(1- (length dir))))
-                      (setq dir (file-name-as-directory dir)))
-                  (funcall action t dir)
-                  (setq level (+ level 4))
-                  (let ((lst (directory-files dir nil nil nil))
-                         fullname 
-                         file)
-                    (while lst
-                      (setq file (car lst))
-                      (setq lst (cdr lst))
-                      (cond ((member file '("." "..")))
-                            (t
-                             (setq fullname (concat dir file))
-                             (walk-path fullname action))))
-                    (setq level (- level 4))))
-                 (t
-                  (funcall action nil dir))))
-    
+      "walk DIR executing ACTION with (dir file)"
+      (unless (string-match ".git/" dir)
+        (cond ((file-directory-p dir)
+               (or (char-equal ?/ (aref dir(1- (length dir))))
+                   (setq dir (file-name-as-directory dir)))
+               (funcall action t dir)
+               (setq level (+ level 4))
+               (let ((lst (directory-files dir nil nil nil))
+                     fullname 
+                     file)
+                 (while lst
+                   (setq file (car lst))
+                   (setq lst (cdr lst))
+                   (cond ((member file '("." "..")))
+                         (t
+                          (setq fullname (concat dir file))
+                          (walk-path fullname action))))
+                 (setq level (- level 4))))
+              (t
+               (funcall action nil dir)))))
+
     ;; This is a dirty hack to search for ".../wiki/" dir with portable concerns.
     ;; All the org documents should be kept in ".../wiki/...". 
     (string-match "wiki" default-directory)
     (walk-path (substring default-directory 0 (match-end 0)) 'walk-path-visitor)
-    
+
   #+END_SRC
   =org/org-templates/= is for storing options common to all my org documents. Options are placed into several layers. =level-N.org= "N" means dir level relative to base-directory. e.g. options in =level-0.org= are applied to org documents in =org/=.
 ** Custom CSS support
