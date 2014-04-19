@@ -123,28 +123,11 @@ The easiest way to setup a given package is to add its initialization code to a 
 There are two ways to have cutom css in addition to the default one: embedded or external. To externalize by using =<link>= tag, the custom css files should be exported accordingly in the publish site.  We can use =#+SETUPFILE: path/file= on top of each org document to make the custom css work on a per-file basis.
 
 An example =level-1.org= looks like:
-#+BEGIN_SRC emacs-lisp :results output :exports results
-  (string-match "wiki" default-directory)
-  (setq wiki-dir (substring default-directory 0 (match-end 0)))
-  (setq wiki-dir (concat (file-name-as-directory wiki-dir) "org"))
-  (setq wiki-dir (concat (file-name-as-directory wiki-dir) "org-templates"))
-  (setq wiki-dir (concat (file-name-as-directory wiki-dir) "level-1.org"))
-  (princ (with-temp-buffer (insert-file-contents wiki-dir) (buffer-string)))
-  
-#+END_SRC
+#+INCLUDE: "../org-templates/level-1.org" src org
 The associate =org/css/code.css=:
-#+BEGIN_SRC emacs-lisp :results output :exports results
-  (string-match "wiki" default-directory)
-  (setq css-dir (substring default-directory 0 (match-end 0)))
-  (setq css-dir (concat (file-name-as-directory css-dir) "org"))
-  (setq css-dir (concat (file-name-as-directory css-dir) "css"))
-  (setq css-dir (concat (file-name-as-directory css-dir) "code.css"))
-  (princ (with-temp-buffer (insert-file-contents css-dir) (buffer-string)))
-#+END_SRC
-A hard-coded css snippet is shown below:
+#+INCLUDE: "../css/code.css" src org
+A hard-coded css snippet, which can be put into =level-N.org= file, is shown below:
 #+BEGIN_EXAMPLE
-  e.g. level-1.org:
-  
   ,#+HTML_HEAD: <style type="text/css">code{border:1px solid LightSkyblue;border-radius:0.5em;padding:0px 5px;background-color:LightCyan;}</style>
 #+END_EXAMPLE
 This will embed the snippet directly into the =<head>= section of exported html files. 
