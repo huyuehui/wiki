@@ -3,4 +3,4 @@
    + emacs
      + [[file:emacs/emacs_orgmode_setup.org][Setup org-mode for Emacs]]
    + mpv
-     + [[file:mpv/mpv_update.org][解析mpv的升级脚本文件“update”]]
+     + [[file:mpv/mpv_update.org][mpv's update script]]

@@ -1,4 +1,4 @@
-#+TITLE: 解析mpv的升级脚本文件“update”
+#+TITLE: mpv's update script
 #+KEYWORDS: mpv
 #+SETUPFILE: ../org-templates/level-1.org
 
