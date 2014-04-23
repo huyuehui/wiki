@@ -2,111 +2,365 @@
 #+KEYWORDS: mpv
 #+SETUPFILE: ../org-templates/level-1.org
 
-* update脚本的内容
-  #+BEGIN_SRC sh
-    #!/bin/sh
-    
-    do_submodules()
-    {
-            set -ex
-            echo >&2 "Executing: git submodule sync"
-            git submodule sync
-            echo >&2 "Executing: git submodule update --init"
-            git submodule update --init
-    }
-    
-    do_gitmaster()
-    {
-            set -ex
-            git submodule foreach 'git checkout master'
-            git submodule foreach 'git pull --rebase'
-            git submodule foreach 'git remote prune origin'
-    }
-    
-    do_releasetag_submodule()
-    {
-            (
-                    cd "$1"
-                    version=`git tag | grep "^$2[0-9]" | sort -V | tail -n 1`
-                    git checkout --detach refs/tags/"$version"
-            )
-    }
-    
-    do_releasetag()
-    {
-            set -ex
-            git submodule foreach 'git fetch'
-            git submodule foreach 'git remote prune origin'
-            do_releasetag_submodule ffmpeg  'n'
-            do_releasetag_submodule fribidi ''
-            do_releasetag_submodule libass  ''
-            do_releasetag_submodule mpv     'v'
-    }
-    
-    if [ x"$1" != x"--skip-selfupdate" ]; then
-            (
-                    set -ex
-                    git pull --rebase
-            )
-            exec "$0" --skip-selfupdate "$@"
-    fi
-    shift
-    
-    case "$1" in
-            --submodule|'')
-                    do_submodules
-                    ;;
-            --master)
-                    do_gitmaster
-                    ;;
-            --release)
-                    do_releasetag
-                    ;;
-            ,*)
-                    echo >&2 "$0 --submodule"
-                    echo >&2 "$0 --master"
-                    echo >&2 "$0 --release"
-                    exit 0
-                    ;;
-    esac
-  #+END_SRC
+* update script
+=git cat-file -p ab7b8ec:update= [fn:sha1]
+#+BEGIN_SRC sh
+  #!/bin/sh
 
-* 脚本分析
-  1. /set/ [fn:source]
+  do_clone()
+  {
+      set -ex
+      if ! test -e "$1" ; then
+          git clone "$2" "$1"
+      fi
+      (
+          cd "$1"
+          git remote set-url origin "$2"
+          git fetch
+      )
+  }
+
+  do_clone_all()
+  {
+      do_clone "ffmpeg"   "https://github.com/FFmpeg/FFmpeg.git"
+      do_clone "fribidi"  "http://anongit.freedesktop.org/git/fribidi/fribidi.git"
+      do_clone "libass"   "https://github.com/libass/libass.git"
+      do_clone "mpv"      "https://github.com/mpv-player/mpv.git"
+  }
+
+  do_gitmaster()
+  {
+      set -ex
+      (
+          cd "$1"
+          git checkout --detach origin/master
+          git remote prune origin
+      )
+  }
+
+  do_gitmaster_all()
+  {
+      set -ex
+      do_clone_all
+      do_gitmaster ffmpeg
+      do_gitmaster fribidi
+      do_gitmaster libass
+      do_gitmaster mpv
+  }
+
+  versort_with_prefix()
+  {
+          # Emulate sort -V using a known prefix. Filter out anything else.
+          sed -n -e "s/^$1\([0-9]\)/\\1/p" |\
+                  sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 |\
+                  sed -e "s/^/$1/"
+          # GNU version of the same:
+          # grep "^$2[0-9]" | sort -V
+  }
+
+  do_releasetag()
+  {
+      (
+          cd "$1"
+          version=`git tag | grep -v rc | versort_with_prefix "$2" | tail -n 1`
+          git checkout --detach refs/tags/"$version"
+      )
+  }
+
+  do_fixedref()
+  {
+      (
+          cd "$1"
+          git checkout --detach "$2"
+      )
+  }
+
+  do_releasetag_all()
+  {
+      set -ex
+      do_clone_all
+      do_releasetag ffmpeg  'n'
+      do_releasetag fribidi ''
+      #do_releasetag libass  ''
+      #do_fixedref libass refs/tags/0.10.2
+      do_gitmaster libass
+      do_releasetag mpv     'v'
+  }
+
+  do_bootstrap()
+  {
+    scripts/mpv-bootstrap
+  }
+
+  do_update_debian_versions()
+  {
+    scripts/debian-update-versions $1
+  }
+
+  if [ x"$1" != x"--skip-selfupdate" ]; then
+      (
+          set -ex
+          git pull --rebase
+      )
+      exec "$0" --skip-selfupdate "$@"
+  fi
+  shift
+
+  case "$1" in
+      --master)
+          do_gitmaster_all
+          ;;
+      --release|'')
+          do_releasetag_all
+          ;;
+      ,*)
+          echo >&2 "$0 --master"
+          echo >&2 "$0 --release"
+          exit 0
+          ;;
+  esac
+
+  do_update_debian_versions $1
+
+  do_bootstrap
+#+END_SRC
+
+* Notes for the update script
+1. git remote set-url origin "$2"
+
+   git remote set-url [--push] <name> <newurl> [<oldurl>]
+
+   =<name>=
+   Name of the remote repositary.
+
+   =set-url=
+   Changes URL remote points to. Sets first URL remote points to matching regex <oldurl> (first URL if no <oldurl> is given) to <newurl>. If <oldurl> doesn’t match any URL, error occurs and nothing is changed.
+   With --push, push URLs are manipulated instead of fetch URLs.
+
+2. git checkout =--detach= origin/master
+
+   Git creates a detached head when you check out a tracking branch[fn:detached_head]. So =--detach= here might be redundant.
+
+3. =version_with_prefix()=
+
+   =grep -v rc=
+   Print lines which have *not* string "rc", "-v" stands for =--invert-match=: Invert the sense of matching, to select non-matching lines.  (`-v' is specified by POSIX.)
+
+   =s/^$1\([0-9]\)/\\1/p=
+   Delete string "$1", which is expanded by shell and must be at the beginning of a line. "\1" means the first match catched by group ([0-9]). Pay attention to the usage of backslash.
+
+   =sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4=
+
+   =-n, --numeric-sort=
+   compare according to string numerical value
+
+   ~-t, --field-separator=SEP~
+   use SEP instead of non-blank to blank transition
+
+   ~-k, --key=POS1[,POS2]~
+   start a key at POS1 (origin 1), end it at POS2 (default end of line)
+
+4. scripts/mpv-bootstrap
+
+   Execute =mpv/bootstrap.py= if exists, which simply downloads waf to mpv/ if waf doesn't present.
+
+5. scripts/debian-update-version
+
+   =git cat-file -p ab7b8ec:scripts/debian-update-versions=
+   #+BEGIN_SRC sh
+     #!/bin/sh
+
+     get_version()
+     {
+         (   
+             cd $1
+             VERSION=$(git describe --tags | sed 's/^[^0-9]*//')
+             echo 1:${VERSION}
+         )
+     }
+
+     get_timestamp_commit()
+     {
+         (
+             cd $1
+             TIMESTAMP=$(git log -1 --date=short --format=%cd | sed 's/-/./g')
+             COMMIT=$(git rev-parse --short HEAD)
+             echo 2:${TIMESTAMP}.${COMMIT}
+         )
+     }
+
+     do_subst() {
+         sed  -e "0,/^mpv (.*)/s/(.*)/($1)/" \
+             -e "s/^  \* local build.*/  \* local build with ffmpeg $2, libass $3/" \
+             -e"s/\(^ -- Local User <localuser@localhost>\).*/\1  $(date -R)/" debian/changelog.TEMPLATE > debian/changelog
+     }
+
+     do_version_all() {
+         do_subst $(get_version mpv) $(get_version ffmpeg) $(get_version libass)
+     }
+
+     do_timestamp_commit_all() {
+        do_subst $(get_timestamp_commit mpv) $(get_timestamp_commit ffmpeg) $(get_timestamp_commit libass)
+     }
+
+     case "$1" in
+         --master)
+             do_timestamp_commit_all
+             ;;
+         --release|'')
+             do_version_all
+             ;;
+         ,*)
+             echo >&2 "$0 --master"
+             echo >&2 "$0 --release"
+             exit 0
+             ;;
+     esac
+        
+   #+END_SRC
+
+   - git describe =--tags=
+
+     The command finds the most recent tag that is reachable from a commit. If the tag points to the commit, then only the tag is shown. Otherwise, it suffixes the tag name with the number of additional commits on top of the tagged object and the abbreviated object name of the most recent commit. By default (without =--all= or =--tags=) git describe only shows annotated tags.
+
+     =--tags=
+     Instead of using only the annotated tags, use any tag found in refs/tags namespace. This option enables matching a lightweight (non-annotated) tag.
+
+     Tag objects (created with -a, s, or -u) are called "annotated" tags; they contain a creation date, the tagger name and e-mail, a tagging message, and an optional GnuPG signature. Whereas a "lightweight" tag is simply a name for an object (usually a commit object).
+
+     Annotated tags are meant for release while lightweight tags are meant for private or temporary object labels. For this reason, some git commands for naming objects (like git describe) will ignore lightweight tags by default.
+
+   - git log -1 --date=short --format=%cd
+
+     =-<number>=
+     Limit the number of commits to output.
+
+     ~--date=(short | local | relative)~
+     /*short*/ shows only the date, but not the time, in YYYY-MM-DD format; /*local*/ shows timestamps in user’s local time zone; /*relative*/ shows dates relative to the current time, e.g. “2 hours ago”.
+
+     ~--format=%cd~
+     /*%cd*/ : committer date
+
+   - git rev-parse =--short= HEAD
+
+     git-rev-parse - Pick out and massage parameters. The above command print the object name (sha1) of the current commit.
+
+     ~--short | --short=number~
+     Instead of outputting the full SHA-1 values of object names try to abbreviate them to a shorter unique name. When no length is specified 7 is used. The minimum length is 4.
+
+   - =do_subst()=
+
+     =0,/regexp/= [fn:gnu_sed_manual]
+     GNU sed also supports some special two-address forms; all these are GNU extensions:
+
+     A line number of 0 can be used in an address specification like =0,/regexp/= so that sed will try to match regexp in the first input line too. In other words, 0,/regexp/ is similar to =1,/regexp/=, except that if addr2 matches the very first line of input the =0,/regexp/= form will consider it to end the range, whereas the =1,/regexp/= form will match the beginning of its range and hence make the range span up to the second occurrence of the regular expression.
+
+     Note that this is the only place where the 0 address makes sense; there is no 0-th line and commands which are given the 0 address in any other way will give an error. 
+
+* Old update script
+=git cat-file -p dff3202:update=
+#+BEGIN_SRC sh
+  #!/bin/sh
+
+  do_submodules()
+  {
+      set -ex
+      echo >&2 "Executing: git submodule sync"
+      git submodule sync
+      echo >&2 "Executing: git submodule update --init"
+      git submodule update --init
+  }
+
+  do_gitmaster()
+  {
+      set -ex
+      git submodule foreach 'git checkout master'
+      git submodule foreach 'git pull --rebase'
+      git submodule foreach 'git remote prune origin'
+  }
+
+  do_releasetag_submodule()
+  {
+      (
+          cd "$1"
+          version=`git tag | grep "^$2[0-9]" | sort -V | tail -n 1`
+          git checkout --detach refs/tags/"$version"
+      )
+  }
+
+  do_releasetag()
+  {
+      set -ex
+      git submodule foreach 'git fetch'
+      git submodule foreach 'git remote prune origin'
+      do_releasetag_submodule ffmpeg  'n'
+      do_releasetag_submodule fribidi ''
+      do_releasetag_submodule libass  ''
+      do_releasetag_submodule mpv     'v'
+  }
+
+  if [ x"$1" != x"--skip-selfupdate" ]; then
+      (
+          set -ex
+          git pull --rebase
+      )
+      exec "$0" --skip-selfupdate "$@"
+  fi
+  shift
+
+  case "$1" in
+      --submodule|'')
+          do_submodules
+          ;;
+      --master)
+          do_gitmaster
+          ;;
+      --release)
+          do_releasetag
+          ;;
+      ,*)
+          echo >&2 "$0 --submodule"
+          echo >&2 "$0 --master"
+          echo >&2 "$0 --release"
+          exit 0
+          ;;
+  esac
+#+END_SRC
+
+* Notes for the OLD update script
+  1. set [fn:source]
 
      set - set or unset options and positional parameters
 
-     /-e/
-
+     =-e=
      When this option is on, if a simple command fails for any of the reasons  listed  in  Consequences  of Shell Errors or returns an exit status value >0, and is not part of the compound list  fol‐ lowing  a  while,  until, or if keyword, and is not a part of an AND or OR list, and is not a pipeline preceded by the ! reserved word, then the shell shall immediately exit.
 
-     /-x/
-
+     =-x=
      The shell shall write to standard error a trace for each command after it expands the command and before it executes  it.  It  is unspecified  whether  the  command  that  turns  tracing  off is traced.
 
-  2. />&2/
+  2. >&2
 
      临时重定向至标准错误输出
 
-  3. /git submodule sync/ [fn:source]
+  3. git submodule sync [fn:source]
 
      Synchronizes submodules' remote URL configuration setting to the value specified in .gitmodules. It will only affect those submodules which already have a URL entry in .git/config (that is the case when they are initialized or freshly added). This is useful when submodule URLs change upstream and you need to update your local repositories accordingly.
 
      "git submodule sync" synchronizes all submodules while "git submodule sync -- A" synchronizes submodule "A" only.
 
-  4. /git submodule update ~--init~/ [fn:source]
+  4. git submodule update =--init= [fn:source]
 
      Update the registered submodules, i.e. clone missing submodules and checkout the commit specified in the index of the containing repository. This will make the submodules HEAD be detached unless ~--rebase~ or ~--merge~ is specified or the key submodule.$name.update is set to rebase, merge or none.  none can be overridden by specifying ~--checkout~. Setting the key submodule.$name.update to !command will cause command to be run.  command can be any arbitrary shell command that takes a single argument, namely the sha1 to update to.
 
      If the submodule is not yet initialized, and you just want to use the setting as stored in .gitmodules, you can automatically initialize the submodule with the ~--init~ option.
 
-  5. /git submodule foreach/ [fn:source]
+  5. git submodule foreach [fn:source]
 
      Evaluates an arbitrary shell command in each checked out submodule. The command has access to the variables $name, $path, $sha1 and $toplevel: $name is the name of the relevant submodule section in .gitmodules, $path is the name of the submodule directory relative to the superproject, $sha1 is the commit as recorded in the superproject, and $toplevel is the absolute path to the top-level of the superproject. Any submodules defined in the superproject but not checked out are ignored by this command. Unless given ~--quiet~, foreach prints the name of each submodule before evaluating the command. If ~--recursive~ is given, submodules are traversed recursively (i.e. the given shell command is evaluated in nested submodules as well). A non-zero return from the command in any submodule causes the processing to terminate. This can be overridden by adding || : to the end of the command.
 
      As an example, git submodule foreach 'echo $path `git rev-parse HEAD`' will show the path and currently checked out commit for each submodule.
 
-  6. /git pull ~--rebase~/ [fn:source]
+  6. git pull =--rebase= [fn:source]
 
      Rebase the current branch on top of the upstream branch after fetching. If there is a remote-tracking branch corresponding to the upstream branch and the upstream branch was rebased since last fetched, the rebase uses that information to avoid rebasing non-local changes.
 
@@ -116,24 +370,24 @@
 
      如果本地没有merge历史的话， ~--rebase~ 应该优先使用，否则可能会丢失本地的merge commit。参考[fn:git1] [fn:git2]
 
-  7. /git remote prune <name>/
+  7. git remote prune <name>
 
      Deletes all stale remote-tracking branches under <name>. These stale branches have already been removed from the remote repository referenced by <name>, but are still locally available in "remotes/<name>".
 
      With ~--dry-run~ option, report what branches will be pruned, but do not actually prune them.
 
-  8. /sort -V/ [fn:source]
+  8. sort -V [fn:source]
 
-     -V, --version-sort
+     =-V, --version-sort=
      natural sort of (version) numbers within text
 
-  9. /git checkout --detach [<branch>]/
+  9. git checkout =--detach= [<branch>]
 
-     /git checkout <commit>/
+     git checkout <commit>
 
      Prepare to work on top of <commit>, by detaching HEAD at it (see "DETACHED HEAD" section), and updating the index and the files in the working tree. Local modifications to the files in the working tree are kept, so that the resulting working tree will be the state recorded in the commit plus the local modifications.
 
-     Passing ~--detach~ forces this behavior in the case of a <branch> (without the option, giving a branch name to the command would check out the branch, instead of detaching HEAD at it), or the current commit, if no <branch> is specified.
+     Passing ~--detach~ forces this behavior in the case of a <branch> (_without the option, giving a branch name to the command would check out the branch, instead of detaching HEAD at it_), or the current commit, if no <branch> is specified.
 
   10. 这段的作用是选择是否升级mpv-build。
       #+BEGIN_SRC sh
@@ -153,9 +407,16 @@
 
 * Footnotes
 
+[fn:sha1] =ab7b8e:update= means =commit sha1:file=, you can use file blob sha1 directly: =047a08e=, which can be get from =git ls-files -s=. P.S. =git show ab7b8e:update= also displays the file contents with one screen page at a time.
+
+[fn:detached_head] "Version Control With Git", Chapter 7: Branches, Page 100
+
+[fn:gnu_sed_manual] [[http://www.gnu.org/software/sed/manual/sed.html#Addresses][GNU Sed Manual]]
+
 [fn:source] From manpages.
 
 [fn:git1] "Version Control With Git", Chapter 10: Altering Commits, Page 171-176
 
 [fn:git2] [[http://www.derekgourlay.com/archives/428]["Git - When to Merge vs. When to Rebase"]]
+
 
