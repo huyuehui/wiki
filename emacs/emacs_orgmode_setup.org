@@ -1,5 +1,5 @@
 #+TITLE: Setup org-mode for Emacs
-#+DATE: <2013-11-21 Thu>
+#+DATE: [2013-11-21 Thu 00:00]
 #+KEYWORDS: emacs org-mode
 #+SETUPFILE: ../org-templates/level-1.org
 
