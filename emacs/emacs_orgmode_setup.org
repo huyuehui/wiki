@@ -18,9 +18,15 @@ Use the Master Branch. Evaluating this code after copying it into your =*scratch
 #+END_SRC
 
 ** Basic Setup
+:PROPERTIES:
+:CUSTOM_ID: BasicSetup
+:END:
+
 In =~/.emacs.d/init.el=, add the following code:
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+
+  (setq el-get-user-package-directory "~/.emacs.d/el-get/el-get-init-files")
 
   (unless (require 'el-get nil 'noerror)
     (with-current-buffer
@@ -34,7 +40,12 @@ In =~/.emacs.d/init.el=, add the following code:
 #+END_SRC
 
 ** Package Setup
-The easiest way to setup a given package is to add its initialization code to a file named =init-<package>.el= with =<package>= replaced with the package name. This file needs to be placed in the directory =el-get-user-package-directory= (defaults to nil, you have to set a value for it, like for example =~/.emacs.d/el-get-init-files/)=.
+The easiest way to setup a given package is to add its initialization code to a file named =init-<package>.el= with =<package>= replaced with the package name. This file needs to be placed in the directory =el-get-user-package-directory= (defaults to nil, you have to set a value for it, like for example =~/.emacs.d/el-get-init-files/)=. See [[#BasicSetup][Basic Setup]]
+#+BEGIN_SRC sh
+  mkdir ~/.emacs.d/el-get/el-get-init-files; cd $_
+  touch init-org-mode.el
+#+END_SRC
+Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-mode.el=.
 
 ** Usage
 *** Adding and removing packages
@@ -137,6 +148,9 @@ This will embed the snippet directly into the =<head>= section of exported html 
 None of these two ways is a perfect solution. I prefer the external way for more elegant and less error-prone.
 
 ** Project Configurations [fn:html_config]
+:PROPERTIES:
+:CUSTOM_ID: OrgmodeConfig
+:END:
 To publish all related files in a project, add the following to your emacs init file:
 #+BEGIN_SRC emacs-lisp
   (setq org-publish-project-alist
