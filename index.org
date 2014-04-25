@@ -1,3 +1,4 @@
+#+TITLE: My Knowledge Base
 #+DATE: [2013-11-29 Fri 19:05]
 #+SETUPFILE: org-templates/level-0.org
 
@@ -18,4 +19,4 @@
 #+TBLFM: @4$3='(progn (string-match ")" (emacs-version)) (substring (emacs-version) 0 (match-end 0)))::@5$3='(el-get-version)::@6$3='(org-version)
 
 * Sitemap
-#+INCLUDE: "sitemap.org" 
+#+INCLUDE: "sitemap.org" :lines "2-" ;;skip #+TITLE
