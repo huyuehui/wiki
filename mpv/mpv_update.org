@@ -126,7 +126,7 @@
   do_bootstrap
 #+END_SRC
 
-* Notes for the update script
+* Notes for the update script [fn:git_manual]
 1. git remote set-url origin "$2"
 
    git remote set-url [--push] <name> <newurl> [<oldurl>]
@@ -328,7 +328,7 @@
   esac
 #+END_SRC
 
-* Notes for the OLD update script
+* Notes for the OLD update script [fn:git_manual]
   1. set [fn:source]
 
      set - set or unset options and positional parameters
@@ -410,6 +410,8 @@
 
 [fn:sha1] =ab7b8e:update= means =commit sha1:file=, you can use file blob sha1 directly: =047a08e=, which can be get from =git ls-files -s=. P.S. =git show ab7b8e:update= also displays the file contents with one screen page at a time.
 
+[fn:git_manual] Mostly quoted from [[https://www.kernel.org/pub/software/scm/git/docs/][Git Manual]]
+
 [fn:detached_head] "Version Control With Git", Chapter 7: Branches, Page 100
 
 [fn:gnu_sed_manual] [[http://www.gnu.org/software/sed/manual/sed.html#Addresses][GNU Sed Manual]]
@@ -419,5 +421,3 @@
 [fn:git1] "Version Control With Git", Chapter 10: Altering Commits, Page 171-176
 
 [fn:git2] [[http://www.derekgourlay.com/archives/428]["Git - When to Merge vs. When to Rebase"]]
-
-
