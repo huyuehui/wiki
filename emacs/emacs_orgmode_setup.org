@@ -1,6 +1,6 @@
-#+TITLE: Setup org-mode for Emacs
+#+TITLE: Setup org-mode & magit for Emacs
 #+DATE: [2013-11-21 Thu 00:00]
-#+KEYWORDS: emacs org-mode
+#+KEYWORDS: org-mode magit emacs
 #+SETUPFILE: ../org-templates/level-1.org
 
 * El-Get [fn:el-get]
@@ -73,13 +73,14 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
   Prompt for a package name, with completion, then open an =*Help*= window with details about the selected package. Those include current status, website, description, installation method, full recipe, and buttons to easily install, update or remove the package.
 
-* org-mode
+* Org-mode
 ------
+** Installation
 =M-x el-get-install RET org-mode RET=
 
-* Setup HTML Export Configuration [fn:html_config]
+** Setup HTML Export Configuration [fn:html_config]
 -----
-** Directory Structure
+*** Directory Structure
 - How to enable =Shell Script= support in org-babel
 
   By default, only emacs-lisp support is enabled. To have sh support, we can use Emacs Customization Interface. See [[http://www.gnu.org/software/emacs/manual/html_node/emacs/Easy-Customization.html#Easy-Customization][Emacs Manual]] for more details. Or permanently enable it in =~/.emacs.d/init.el= [fn:org_language]. Shell script has more advantages over os related work. When portabilities are taken into account, emacs-lisp src blocks should be used as much as possible.
@@ -132,7 +133,7 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
   =org/org-templates/= is for storing options common to all my org documents. Options are placed into several layers. =level-N.org= "N" means dir level relative to base-directory. e.g. options in =level-0.org= are applied to org documents in =org/=.
 
-** Custom CSS support
+*** Custom CSS support
 There are two ways to have cutom css in addition to the default one: embedded or external. To externalize by using =<link>= tag, the custom css files should be exported accordingly in the publish site.  We can use =#+SETUPFILE: path/file= on top of each org document to make the custom css work on a per-file basis.
 
 An example =level-1.org= looks like:
@@ -179,6 +180,37 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
   (setq org-confirm-babel-evaluate nil)
 #+END_SRC
 
+* Magit
+-----
+** Installation
+=M-x el-get-install magit=
+** Useage
+The following is a simple reference card[fn:magit]:
+-----
+=M-x magit-status=	Displays status buffer of your git repo
+
+In Status Buffer:
+
+=?= =C-c C-e= =C-c C-c= magit-key-mode-popup-dispatch
+
+=g=			Refresh status buffer
+
+=s=			Add the item at point to the staging area
+
+=C-u s=			prompt for a file to be staged instead
+
+=u=			Remove the item at point from the staging area
+
+=c=			Commiting, pop up a buffer for writing commit messages. type "C-c C-c" when finished
+
+=k=			Discard changes/Delete (untracked) file at point
+-----
+The above lines are formated using ~C-u M-x align-regexp RET =\(\s-+\)[^] RET RET n~
+- ~=\(\s-+\)[^]~ :: regexp: Match lines. =\s-= means whitespace in emacs lisp.
+- RET :: group: The regular expression group. These are the characters that will be deleted/expanded for the purposes of alignment.  The "alignment character" is always the first character immediately following this parenthesis group. /negative/ for *justify*, which can be used for right align[fn:align_regexp_justify]. The default for this attribute is 1.
+- RET :: spacing: use the default spacing, which is =1=.
+- n :: repeat throughout line: y or n.
+
 * Footnotes
 
 [fn:el-get] Mostly copy&paste from [[https://github.com/dimitri/el-get][El-Get's README.md]]
@@ -186,3 +218,8 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
 [fn:html_config] [[http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html][Publishing Org-mode files to HTML]]
 
 [fn:org_language] [[http://orgmode.org/org.html#Languages][Languages support in Babel]]
+
+[fn:magit] See [[http://magit.github.io/master/magit.html][Magit User Manual]] for details.
+
+[fn:align_regexp_justify] Quoted from =align-rules-list= variable description: It is possible with `regexp' and `group' to identify a character group that contains more than just whitespace characters.  By default, any non-whitespace characters in that group will also be deleted while aligning the alignment character.  However, if the `justify' attribute is set to a non-nil value, only the initial whitespace characters within that group will be deleted.  This has the effect of right-justifying the characters that remain, and can be used for outdenting or just plain old right-justification.
+
