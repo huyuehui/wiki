@@ -186,27 +186,19 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
 =M-x el-get-install magit=
 ** Useage
 The following is a simple reference card[fn:magit]:
------
-=M-x magit-status=	Displays status buffer of your git repo
+#+BEGIN_EXAMPLE
+  M-x magit-status        Display status buffer of your git repo
 
-In Status Buffer:
-
-=?= =C-c C-e= =C-c C-c= magit-key-mode-popup-dispatch
-
-=g=			Refresh status buffer
-
-=s=			Add the item at point to the staging area
-
-=C-u s=			prompt for a file to be staged instead
-
-=u=			Remove the item at point from the staging area
-
-=c=			Commiting, pop up a buffer for writing commit messages. type "C-c C-c" when finished
-
-=k=			Discard changes/Delete (untracked) file at point
------
-The above lines are formated using ~C-u M-x align-regexp RET =\(\s-+\)[^] RET RET n~
-- ~=\(\s-+\)[^]~ :: regexp: Match lines. =\s-= means whitespace in emacs lisp.
+  ?                       Display magit-key-mode-popup-dispatch
+  g                       Refresh status buffer
+  s                       Add the item at point to the staging area
+  C-u s                   Prompt for a file to be staged instead
+  u                       Remove the item at point from the staging area
+  c c                     Commiting, pop up a buffer for writing commit messages. "C-c C-c" to commit
+  k                       Discard changes/Delete (untracked) file at point
+#+END_EXAMPLE
+The above lines are formated using ~C-u M-x align-regexp RET \(\s-+\)\w\{2,\}\(?:\s-\|\s.\|$\) RET RET n~:
+- ~\(\s-+\)\w\{2,\}\(?:\s-\|\s.\|$\)~ :: regexp: Match lines. In emacs lisp, =\s-= matches whitespace; =\w= matches word-constituent charactor; =\{2,\}= matches at least 2 times; =\(?:...\)= is the shy group construct. A shy group serves like a ordinary group, but it does not get a number; =\(...\|...\)= matches one of alternatives; =\s.= matches punctuation charactor; =$= matches end of line.
 - RET :: group: The regular expression group. These are the characters that will be deleted/expanded for the purposes of alignment.  The "alignment character" is always the first character immediately following this parenthesis group. /negative/ for *justify*, which can be used for right align[fn:align_regexp_justify]. The default for this attribute is 1.
 - RET :: spacing: use the default spacing, which is =1=.
 - n :: repeat throughout line: y or n.
