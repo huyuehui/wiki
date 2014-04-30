@@ -49,29 +49,19 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
 ** Usage
 *** Adding and removing packages
-- =M-x el-get-install=
+- =M-x el-get-install= :: Will prompt for a package name, with completion, then install it. It will only propose packages that are not already installed. Any package that you have a recipe for is a candidate.
 
-  Will prompt for a package name, with completion, then install it. It will only propose packages that are not already installed. Any package that you have a recipe for is a candidate.
-
-- =M-x el-get-remove=
+- =M-x el-get-remove= ::
 
 *** Keeping up to date
-- =M-x el-get-self-update=
+- =M-x el-get-self-update= :: Update only one package, el-get itself.
 
-  Update only one package, el-get itself.
-
-- =M-x el-get-update=
-
-  Will prompt for an installed package name, with completion, then update it. This will run the =build= commands and =init= the package again.
+- =M-x el-get-update= :: Will prompt for an installed package name, with completion, then update it. This will run the =build= commands and =init= the package again.
 
 *** Viewing available recipes
-- =M-x el-get-list-packages=
+- =M-x el-get-list-packages= :: Opens a buffer listing all known packages (those for which you have a recipe). The listing includes the package name, its status (one of available, installed, removed or required) and the package description. The description is a free form text and has not been provided for all recipes.
 
-  Opens a buffer listing all known packages (those for which you have a recipe). The listing includes the package name, its status (one of available, installed, removed or required) and the package description. The description is a free form text and has not been provided for all recipes.
-
-- =M-x el-get-describe=
-
-  Prompt for a package name, with completion, then open an =*Help*= window with details about the selected package. Those include current status, website, description, installation method, full recipe, and buttons to easily install, update or remove the package.
+- =M-x el-get-describe= :: Prompt for a package name, with completion, then open an =*Help*= window with details about the selected package. Those include current status, website, description, installation method, full recipe, and buttons to easily install, update or remove the package.
 
 * Org-mode
 ------
@@ -199,8 +189,11 @@ The following is a simple reference card[fn:magit]:
 #+END_EXAMPLE
 The above lines are formated using ~C-u M-x align-regexp RET \(\s-+\)\w\{2,\}\(?:\s-\|\s.\|$\) RET RET n~:
 - ~\(\s-+\)\w\{2,\}\(?:\s-\|\s.\|$\)~ :: regexp: Match lines. In emacs lisp, =\s-= matches whitespace; =\w= matches word-constituent charactor; =\{2,\}= matches at least 2 times; =\(?:...\)= is the shy group construct. A shy group serves like a ordinary group, but it does not get a number; =\(...\|...\)= matches one of alternatives; =\s.= matches punctuation charactor; =$= matches end of line.
+
 - RET :: group: The regular expression group. These are the characters that will be deleted/expanded for the purposes of alignment.  The "alignment character" is always the first character immediately following this parenthesis group. /negative/ for *justify*, which can be used for right align[fn:align_regexp_justify]. The default for this attribute is 1.
+
 - RET :: spacing: use the default spacing, which is =1=.
+
 - n :: repeat throughout line: y or n.
 
 * Footnotes
