@@ -15,8 +15,10 @@
 |---+-----------------+----------------------------------------------------------------|
 |   | emacs: org-mode | 8.2.6                                                          |
 |---+-----------------+----------------------------------------------------------------|
+|   | emacs: magit    | 1.2.0-2312-gf2d3564                                            |
+|---+-----------------+----------------------------------------------------------------|
 |   | git             | 1.9.2                                                          |
-#+TBLFM: @4$3='(progn (string-match ")" (emacs-version)) (substring (emacs-version) 0 (match-end 0)))::@5$3='(el-get-version)::@6$3='(org-version)
+#+TBLFM: @4$3='(progn (string-match ")" (emacs-version)) (substring (emacs-version) 0 (match-end 0)))::@5$3='(el-get-version)::@6$3='(org-version)::@7$3='(magit-version)
 
 * Sitemap
 #+INCLUDE: "sitemap.org" :lines "2-" ;;skip #+TITLE
