@@ -194,7 +194,7 @@ The following is a simple reference card[fn:magit]:
   s                       Add the item at point to the staging area
   C-u s                   Prompt for a file to be staged instead
   u                       Remove the item at point from the staging area
-  c c                     Commiting, pop up a buffer for writing commit messages. "C-c C-c" to commit
+  c c                     Committing, pop up a buffer for writing commit messages. "C-c C-c" to commit
   k                       Discard changes/Delete (untracked) file at point
 #+END_EXAMPLE
 The above lines are formated using ~C-u M-x align-regexp RET \(\s-+\)\w\{2,\}\(?:\s-\|\s.\|$\) RET RET n~:
