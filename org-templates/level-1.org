@@ -1,4 +1,5 @@
 #+AUTHOR: Hu YueHui
 #+EMAIL: redxiii@163.com
+#+OPTIONS: email:t
 #+STARTUP: showall
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/code.css"></link>
