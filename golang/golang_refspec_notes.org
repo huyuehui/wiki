@@ -1,0 +1,103 @@
+#+TITLE: Notes on Go's Language Specification
+#+DATE: [2014-05-11 Sun 12:55]
+#+KEYWORDS: refspec golang
+#+SETUPFILE: ../org-templates/level-1.org
+
+* Shift Expression
+#+BEGIN_EXAMPLE
+  var s uint = 33
+  var i = 1<<s           // 1 has type int
+  var j int32 = 1<<s     // 1 has type int32; j == 0
+  var k = uint64(1<<s)   // 1 has type uint64; k == 1<<33
+  var m int = 1.0<<s     // 1.0 has type int
+  var n = 1.0<<s != i    // 1.0 has type int; n == false if ints are 32bits in size
+  var o = 1<<s == 2<<s   // 1 and 2 have type int; o == true if ints are 32bits in size
+  var p = 1<<s == 1<<33  // illegal if ints are 32bits in size: 1 has type int, but 1<<33 overflows int
+  var u = 1.0<<s         // illegal: 1.0 has type float64, cannot shift
+  var u1 = 1.0<<s != 0   // illegal: 1.0 has type float64, cannot shift
+  var u2 = 1<<s != 1.0   // illegal: 1 has type float64, cannot shift
+  var v float32 = 1<<s   // illegal: 1 has type float32, cannot shift
+  var w int64 = 1.0<<33  // 1.0<<33 is a constant shift expression
+#+END_EXAMPLE
+
+** Operand Type
+*** Constants [fn:refspec_constants]
+There are boolean constants, rune constants, integer constants, floating-point constants, complex constants, and string constants. Rune, integer, floating-point, and complex constants are collectively called numeric constants.
+
+A constant value is represented by a rune, integer, floating-point, imaginary, or string literal, an identifier denoting a constant, a constant expression, a conversion with a result that is a constant, or the result value of some built-in functions such as unsafe.Sizeof applied to any value, cap or len applied to some expressions, real and imag applied to a complex constant and complex applied to numeric constants. The boolean truth values are represented by the predeclared constants true and false. The predeclared identifier iota denotes an integer constant.
+
+In general, complex constants are a form of constant expression and are discussed in that section.
+
+Numeric constants represent values of arbitrary precision and do not overflow.
+
+*Constants may be typed or untyped. Literal constants, true, false, iota, and certain §[[#ConstantExpressions][constant expressions]] containing only untyped constant operands are untyped.*
+
+A constant may be given a type explicitly by a constant declaration or conversion, or implicitly when used in a §[[#VariableDeclarations][variable declaration]] or an assignment or as an operand in an expression. It is an error if the constant value cannot be represented as a value of the respective type. For instance, 3.0 can be given any integer or any floating-point type, while 2147483648.0 (equal to 1<<31) can be given the types float32, float64, or uint32 but not int32 or string.
+*** Assignability [fn:refspec_assignability]
+:PROPERTIES:
+:CUSTOM_ID: Assignability
+:END:
+A value x is assignable to a variable of type T ("x is assignable to T") in any of these cases:
+- x's type is identical to T.
+- x's type V and T have identical underlying types and at least one of V or T is not a named type.
+- T is an interface type and x implements T.
+- x is a bidirectional channel value, T is a channel type, x's type V and T have identical element types, and at least one of V or T is not a named type.
+- x is the predeclared identifier nil and T is a pointer, function, slice, map, channel, or interface type.
+- *x is an untyped constant representable by a value of type T.*
+
+*** Assignments [fn:refspec_assignments]
+:PROPERTIES:
+:CUSTOM_ID: Assignments
+:END:
+In assignments, each value must be §[[#Assignability][assignable]] to the type of the operand to which it is assigned, with the following special cases:
+1. If an untyped constant is assigned to a variable of interface type or the blank identifier, the constant is first converted to type bool, rune, int, float64, complex128 or string respectively, depending on whether the value is a boolean, rune, integer, floating-point, complex, or string constant.
+2. If a left-hand side is the blank identifier, any typed or non-constant value except for the predeclared identifier nil may be assigned to it.
+*** Constant declarations [fn:refspec_constant_declarations]
+If the type is present, all constants take the type specified, and the expressions must be §[[#Assignability][assignable]] to that type. If the type is omitted, the constants take the individual types of the corresponding expressions. If the expression values are untyped constants, the declared constants remain untyped and the constant identifiers denote the constant values. For instance, if the expression is a floating-point literal, the constant identifier denotes a floating-point constant, even if the literal's fractional part is zero.
+#+BEGIN_SRC go
+  const zero = 0.0   // untyped floating-point constant
+  const eof  = -1    // untyped integer constant
+#+END_SRC
+*** Variable declarations [fn:refspec_variable_declarations]
+:PROPERTIES:
+:CUSTOM_ID: VariableDeclarations
+:END:
+If the type is present, each variable is given that type. Otherwise, the types are deduced from the assignment of the expression list.
+
+If the type is absent and the corresponding expression evaluates to an untyped constant, the type of the declared variable is as described in §[[#Assignments][Assignments]].
+*** Operators [fn:refspec_arithmetic_operators] [fn:refspec_comparison_operators]
+Arithmetic operators apply to numeric values and yield a result of the same type as the first operand. Shift operators apply to integers only.
+
+For comparison operators, the first operand must be [[#Assignability][§assignable]] to the type of the second operand, or vice versa. The compare result is an untyped boolean value. For other /binary/ operators, the operand types must be *identical* unless the operation involves shifts or untyped constants.
+
+Except for shift operations, if one operand is an untyped constant and the other operand is not, the constant is converted to the type of the other operand.
+
+The right operand in a shift expression must have unsigned integer type or be an untyped constant that can be converted to unsigned integer type. If the left operand of a *non-constant* shift expression is an untyped constant, the type of the constant is what it would be if the shift expression were replaced by its left operand alone.
+*** Constant expressions [fn:refspec_constant_expressions]
+:PROPERTIES:
+:CUSTOM_ID: ConstantExpressions
+:END:
+
+Constant expressions may contain only constant operands and are evaluated at compile time.
+
+Untyped boolean, numeric, and string constants may be used as operands wherever it is legal to use an operand of boolean, numeric, or string type, respectively. Except for shift operations, if the operands of a binary operation are different kinds of untyped constants, the operation and, for non-boolean operations, the result use the kind that appears later in this list: integer, rune, floating-point, complex. For example, an untyped integer constant divided by an untyped complex constant yields an untyped complex constant.
+
+A constant comparison always yields an untyped boolean constant. If the left operand of a constant shift expression is an untyped constant, the result is an integer constant; otherwise it is a constant of the same type as the left operand, which must be of integer type. Applying all other operators to untyped constants results in an untyped constant of the same kind (that is, a boolean, integer, floating-point, complex, or string constant).
+* Footnotes
+
+[fn:refspec_arithmetic_operators] [[http://golang.org/ref/spec#Arithmetic_operators][Go Language Specification: Arithmetic Operators]]
+
+[fn:refspec_constant_expressions] [[http://golang.org/ref/spec#Constant_expressions][Go Language Specification: Constant expressions]]
+
+[fn:refspec_constants] [[http://golang.org/ref/spec#Constants][Go Language Specification: Constants]]
+
+[fn:refspec_variable_declarations] [[http://golang.org/ref/spec#Variable_declarations][Go Language Specification: Variable declarations]]
+
+[fn:refspec_assignments] [[http://golang.org/ref/spec#Assignments][Go Language Specification: Assignments]]
+
+[fn:refspec_assignability] [[http://golang.org/ref/spec#Assignability][Go Language Specification: Assignability]]
+
+[fn:refspec_comparison_operators] [[http://golang.org/ref/spec#Comparison_operators][Go Language Specification: Comparison operators]]
+
+[fn:refspec_constant_declarations] [[http://golang.org/ref/spec#Constant_declarations][Go Language Specification: Constant declarations]]
+ 
