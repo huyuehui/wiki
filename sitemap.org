@@ -2,6 +2,8 @@
 
    + emacs
      + [[file:emacs/emacs_orgmode_setup.org][Setup org-mode & magit for Emacs]]
+   + golang
+     + [[file:golang/golang_refspec_notes.org][Notes on Go's Language Specification]]
    + mpv
      + [[file:mpv/mpv_update.org][mpv's update script]]
    + [[file:index.org][My Knowledge Base]]

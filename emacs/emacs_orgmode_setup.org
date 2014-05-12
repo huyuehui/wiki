@@ -3,7 +3,7 @@
 #+KEYWORDS: org-mode magit emacs
 #+SETUPFILE: ../org-templates/level-1.org
 
-* El-Get [fn:el-get]
+* el-Get [fn:el-get]
 -----
 ** Installation
 Use the Master Branch. Evaluating this code after copying it into your =*scratch*= buffer by typing =C-j= or =M-x eval-print-last-exp= will retrieve the El-Get installation script. This script will then use =git= to clone El-Get and install it to the default location =~/.emacs.d/el-get/el-get=.
@@ -63,7 +63,7 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
 - =M-x el-get-describe= :: Prompt for a package name, with completion, then open an =*Help*= window with details about the selected package. Those include current status, website, description, installation method, full recipe, and buttons to easily install, update or remove the package.
 
-* Org-mode
+* org-mode
 ------
 ** Installation
 =M-x el-get-install RET org-mode RET=
@@ -170,7 +170,7 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
   (setq org-confirm-babel-evaluate nil)
 #+END_SRC
 
-* Magit
+* magit
 -----
 ** Installation
 =M-x el-get-install magit=
@@ -196,6 +196,17 @@ The above lines are formated using ~C-u M-x align-regexp RET \(\s-+\)\w\{2,\}\(?
 
 - n :: repeat throughout line: y or n.
 
+* org-babel support for Golang
+Use =ob-go.el= from [[https://github.com/pope/ob-go][ob-go]]
+#+BEGIN_SRC sh
+  mv ob-go-master.zip ~/.emacs.d
+  7z x ob-go-master.zip
+#+END_SRC
+In your =~/.emacs.d/init.el=, add the following lines:
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "~/.emacs.d/ob-go-master")
+  (require 'ob-go)
+#+END_SRC
 * Footnotes
 
 [fn:el-get] Mostly copy&paste from [[https://github.com/dimitri/el-get][El-Get's README.md]]
