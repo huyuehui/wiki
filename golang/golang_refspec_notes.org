@@ -4,23 +4,7 @@
 #+SETUPFILE: ../org-templates/level-1.org
 
 * Shift Expression
-#+BEGIN_EXAMPLE
-  var s uint = 33
-  var i = 1<<s           // 1 has type int
-  var j int32 = 1<<s     // 1 has type int32; j == 0
-  var k = uint64(1<<s)   // 1 has type uint64; k == 1<<33
-  var m int = 1.0<<s     // 1.0 has type int
-  var n = 1.0<<s != i    // 1.0 has type int; n == false if ints are 32bits in size
-  var o = 1<<s == 2<<s   // 1 and 2 have type int; o == true if ints are 32bits in size
-  var p = 1<<s == 1<<33  // illegal if ints are 32bits in size: 1 has type int, but 1<<33 overflows int
-  var u = 1.0<<s         // illegal: 1.0 has type float64, cannot shift
-  var u1 = 1.0<<s != 0   // illegal: 1.0 has type float64, cannot shift
-  var u2 = 1<<s != 1.0   // illegal: 1 has type float64, cannot shift
-  var v float32 = 1<<s   // illegal: 1 has type float32, cannot shift
-  var w int64 = 1.0<<33  // 1.0<<33 is a constant shift expression
-#+END_EXAMPLE
-
-** Operand Type
+** Type rule for shift expression
 *** Constants [fn:refspec_constants]
 There are boolean constants, rune constants, integer constants, floating-point constants, complex constants, and string constants. Rune, integer, floating-point, and complex constants are collectively called numeric constants.
 
@@ -49,6 +33,8 @@ A value x is assignable to a variable of type T ("x is assignable to T") in any 
 :PROPERTIES:
 :CUSTOM_ID: Assignments
 :END:
+The assignment proceeds in two phases. First, the operands of index expressions and pointer indirections (including implicit pointer indirections in selectors) on the left and the expressions on the right are all evaluated in the usual order. Second, the assignments are carried out in left-to-right order.
+
 In assignments, each value must be §[[#Assignability][assignable]] to the type of the operand to which it is assigned, with the following special cases:
 1. If an untyped constant is assigned to a variable of interface type or the blank identifier, the constant is first converted to type bool, rune, int, float64, complex128 or string respectively, depending on whether the value is a boolean, rune, integer, floating-point, complex, or string constant.
 2. If a left-hand side is the blank identifier, any typed or non-constant value except for the predeclared identifier nil may be assigned to it.
@@ -62,17 +48,11 @@ If the type is present, all constants take the type specified, and the expressio
 :PROPERTIES:
 :CUSTOM_ID: VariableDeclarations
 :END:
+If a list of expressions is given, the variables are initialized by [[#Assignments][§assigning]] the expressions to the variables in order; all expressions must be consumed and all variables initialized from them. Otherwise, each variable is initialized to its zero value.
+
 If the type is present, each variable is given that type. Otherwise, the types are deduced from the assignment of the expression list.
 
 If the type is absent and the corresponding expression evaluates to an untyped constant, the type of the declared variable is as described in §[[#Assignments][Assignments]].
-*** Operators [fn:refspec_arithmetic_operators] [fn:refspec_comparison_operators]
-Arithmetic operators apply to numeric values and yield a result of the same type as the first operand. Shift operators apply to integers only.
-
-For comparison operators, the first operand must be [[#Assignability][§assignable]] to the type of the second operand, or vice versa. The compare result is an untyped boolean value. For other /binary/ operators, *the operand types must be identical unless the operation involves shifts or untyped constants.*
-
-Except for shift operations, if one operand is an untyped constant and the other operand is not, the constant is converted to the type of the other operand.
-
-The right operand in a shift expression must have unsigned integer type or be an untyped constant that can be converted to unsigned integer type. If the left operand of a *non-constant* shift expression is an untyped constant, the type of the constant is what it would be if the shift expression were replaced by its left operand alone.
 *** Constant expressions [fn:refspec_constant_expressions]
 :PROPERTIES:
 :CUSTOM_ID: ConstantExpressions
@@ -80,16 +60,116 @@ The right operand in a shift expression must have unsigned integer type or be an
 
 Constant expressions may contain only constant operands and are evaluated at compile time.
 
-Untyped boolean, numeric, and string constants may be used as operands wherever it is legal to use an operand of boolean, numeric, or string type, respectively. Except for shift operations, if the operands of a binary operation are *different kinds* of untyped constants, the operation and, for non-boolean operations, the result use the kind that appears later in this list: integer, rune, floating-point, complex. For example, an untyped integer constant divided by an untyped complex constant yields an untyped complex constant.
+Untyped boolean, numeric, and string constants may be used as operands wherever it is legal to use an operand of boolean, numeric, or string type, respectively. Except for shift operations, if the operands of a binary operation are *different kinds* of untyped constants, the operation and, for non-boolean operations, the result use *the kind that appears later* in this list: integer, rune, floating-point, complex. For example, an untyped integer constant divided by an untyped complex constant yields an untyped complex constant.
+
+A constant comparison always yields an untyped boolean constant. *If the left operand of a constant shift expression is an untyped constant, the result is an integer constant*; otherwise it is a constant of the same type as the left operand, which must be of integer type. Applying all other operators to untyped constants results in an untyped constant of the same kind (that is, a boolean, integer, floating-point, complex, or string constant).
 #+BEGIN_SRC go
   const a = 2 + 3.0          // a == 5.0   (untyped floating-point constant)
   const b = 15 / 4           // b == 3     (untyped integer constant)
   const c = 15 / 4.0         // c == 3.75  (untyped floating-point constant)
   const Θ float64 = 3/2      // Θ == 1.0   (type float64, 3/2 is integer division)
   const Π float64 = 3/2.     // Π == 1.5   (type float64, 3/2. is float division)
+  const d = 1 << 3.0         // d == 8     (untyped integer constant)
+  const e = 1.0 << 3         // e == 8     (untyped integer constant)
+  const f = int32(1) << 33   // illegal    (constant 8589934592 overflows int32)
+  const g = float64(2) >> 1  // illegal    (float64(2) is a typed floating-point constant)
+  const h = "foo" > "bar"    // h == true  (untyped boolean constant)
+  const j = true             // j == true  (untyped boolean constant)
+  const k = 'w' + 1          // k == 'x'   (untyped rune constant)
+  const l = "hi"             // l == "hi"  (untyped string constant)
+  const m = string(k)        // m == "x"   (type string)
+  const Σ = 1 - 0.707i       //            (untyped complex constant)
+  const Δ = Σ + 2.0e-4       //            (untyped complex constant)
+  const Φ = iota*1i - 1/1i   //            (untyped complex constant)
 #+END_SRC
 
-A constant comparison always yields an untyped boolean constant. If the left operand of a constant shift expression is an untyped constant, the result is an integer constant; otherwise it is a constant of the same type as the left operand, which must be of integer type. Applying all other operators to untyped constants results in an untyped constant of the same kind (that is, a boolean, integer, floating-point, complex, or string constant).
+#+BEGIN_SRC go :exports both :results output :imports '("fmt" "reflect")
+  const i int8 = 1
+  fmt.Printf("i<<2 =%d, type of i:%s", i<<2, reflect.TypeOf(i))
+#+END_SRC
+
+#+RESULTS:
+: i<<2 =4, type of i:int8
+
+*** Operators [fn:refspec_arithmetic_operators] [fn:refspec_comparison_operators]
+Arithmetic operators apply to numeric values and yield a result of the same type as the first operand. Shift operators apply to integers only.
+
+For comparison operators, the first operand must be [[#Assignability][§assignable]] to the type of the second operand, or vice versa. The compare result is an untyped boolean value. For other /binary/ operators, *the operand types must be identical unless the operation involves shifts or untyped constants.*
+
+Except for shift operations, if one operand is an untyped constant and the other operand is not, the constant is converted to the type of the other operand.
+
+The right operand in a shift expression must have unsigned integer type or be an untyped constant that can be converted to unsigned integer type. *If the left operand of a /non-constant/ shift expression is an untyped constant, the type of the constant is what it would be if the shift expression were replaced by its left operand alone.*
+#+BEGIN_SRC go
+  var s uint = 33
+  var i = 1<<s           // 1 has type int
+  var j int32 = 1<<s     // 1 has type int32; j == 0
+  var k = uint64(1<<s)   // 1 has type uint64; k == 1<<33
+  var m int = 1.0<<s     // 1.0 has type int
+  var n = 1.0<<s != i    // 1.0 has type int; n == false if ints are 32bits in size
+  var o = 1<<s == 2<<s   // 1 and 2 have type int; o == true if ints are 32bits in size
+  var p = 1<<s == 1<<33  // illegal if ints are 32bits in size: 1 has type int, but 1<<33 overflows int
+  var u = 1.0<<s         // illegal: 1.0 has type float64, cannot shift
+  var u1 = 1.0<<s != 0   // illegal: 1.0 has type float64, cannot shift
+  var u2 = 1<<s != 1.0   // illegal: 1 has type float64, cannot shift
+  var v float32 = 1<<s   // illegal: 1 has type float32, cannot shift
+  var w int64 = 1.0<<33  // 1.0<<33 is a constant shift expression
+#+END_SRC
+
+** Notes
+#+BEGIN_QUOTE
+If the left operand of a non-constant shift expression is an untyped constant, the type of the constant is what it would be if the shift expression were replaced by its left operand alone.
+#+END_QUOTE
+This means, *the type of the constant depends on the context of the shift.* See discussions in these issues for further details:
+
+[[https://code.google.com/p/go/issues/detail?id%3D4880][Issue 4880]]
+[[https://code.google.com/p/go/issues/detail?id%3D4881][Issue 4881]]
+[[https://code.google.com/p/go/issues/detail?id%3D4882][Issue 4882]]
+[[https://code.google.com/p/go/issues/detail?id%3D4883][Issue 4883]]
+[[https://code.google.com/p/go/issues/detail?id%3D658][Issue 658]]
+
+[[https://codereview.appspot.com/7707043][spec: remove special int rule for shifts]], especially [[https://codereview.appspot.com/7707043#msg5][msg5]] :
+#+BEGIN_QUOTE
+As an aside, type-checking shifts turns out to be less difficult then it might seem. The algorithm used in go/types is as follows: When type-checking a shift c<<s expression, the type of a shift is the type of the lhs of the shift (c) "as if the shift where not present" - like the spec requires. That is, it type-checks the tree using c instead of c<<s. The type-checker simply remembers that lhs for later (again, this only matters for untyped lhs). Once the entire expression is "used" (assigned, used in a comparison, as index, etc.) the final (not untyped) type of the expression is known. That type is simply propagated down the expression tree again and thus determines the final type of such a lhs. If at that point the lhs is not an integer type, the shift fails and an error is reported. This is exactly the observed behavior in all the examples above for gccgo and go/types.
+#+END_QUOTE
+
+For unsigned/signed integer operand: [fn:refspec_arithmetic_operators]
+#+BEGIN_QUOTE
+The shift operators shift the left operand by the shift count specified by the right operand. They implement arithmetic shifts if the left operand is a signed integer and logical shifts if it is an unsigned integer. There is no upper limit on the shift count. Shifts behave as if the left operand is shifted n times by 1 for a shift count of n. As a result, x << 1 is the same as x*2 and x >> 1 is the same as x/2 but truncated towards negative infinity.
+#+END_QUOTE
+
+Considering integer overflow: [fn:refspec_integer_overflow]
+#+BEGIN_QUOTE
+For unsigned integer values, the operations +, -, *, and << are computed modulo 2^n, where n is the bit width of the unsigned integer's type. Loosely speaking, these unsigned integer operations discard high bits upon overflow, and programs may rely on ``wrap around''.
+
+For signed integers, the operations +, -, *, and << may legally overflow and the resulting value exists and is deterministically defined by the signed integer representation, the operation, and its operands. No exception is raised as a result of overflow. A compiler may not optimize code under the assumption that overflow does not occur. For instance, it may not assume that x < x + 1 is always true.
+#+END_QUOTE
+
+#+BEGIN_SRC go
+  // No context info can be used to determine the type of "1" in "1<<s", 
+  // so the numeric literal "1" of integer kind has the default int type.
+  var i = 1<<s
+
+  // "1.0" is a numeric literal of floating-point kind, of which the 
+  // the default type is float64.
+  var u = 1.0<<s         // illegal: 1.0 has type float64, cannot shift
+
+  // The type of "1" can be determined by the assignment.
+  var j int32 = 1<<s     // 1 has type int32; j == 0
+
+  // The context of shift is in comparison. Both lhs and rhs are shift 
+  // expressions that operate on untyped constants. Thus the type of "1" 
+  // and "2" can't be determined. Use the default int type.
+  var o = 1<<s == 2<<s   // 1 and 2 have type int; o == true if ints are 32bits in size
+
+  // In the comparison, the type of "i" is int. Thus "1.0" has type int. 
+  var n = 1.0<<s != i    // 1.0 has type int; n == false if ints are 32bits in size
+
+  // "1<<33" is constant shift expression, of which the left operand "1" 
+  // is an untyped constant. So the result is an integer constant. Thus
+  // the "1" in "1<<s" has type int. 
+  var p = 1<<s == 1<<33  // illegal if ints are 32bits in size: 1 has type int, but 1<<33 overflows int
+#+END_SRC
+
 * Footnotes
 
 [fn:refspec_arithmetic_operators] [[http://golang.org/ref/spec#Arithmetic_operators][Go Language Specification: Arithmetic Operators]]
@@ -107,4 +187,6 @@ A constant comparison always yields an untyped boolean constant. If the left ope
 [fn:refspec_comparison_operators] [[http://golang.org/ref/spec#Comparison_operators][Go Language Specification: Comparison operators]]
 
 [fn:refspec_constant_declarations] [[http://golang.org/ref/spec#Constant_declarations][Go Language Specification: Constant declarations]]
+
+[fn:refspec_integer_overflow] [[http://golang.org/ref/spec#Integer_overflow][Go Language Specification: Integer overflow]]
  
