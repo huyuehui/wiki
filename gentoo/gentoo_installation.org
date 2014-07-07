@@ -5,9 +5,8 @@
 #+SETUPFILE: ../org-templates/level-1.org
 
 * TODO Use sh scripts to cat related configure files?
-* TODO Add "noatime" to "/dev/sdb2" mount options to improve performance?
 
-* Windows 8.1
+* Windows 8.1 with update 1
 
 ** Installation & Activation
 
@@ -540,7 +539,7 @@ efibootmgr requires that you boot into UEFI mode /FIRST/! Here we have two optio
 
 ***** Creating /etc/fstab
 
-Quoted from [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml?part=1&chap=8#doc_chap1][Gentoo::Handbook::8a-Filesystem_Information]]:
+Quoted from [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml?part=1&chap=8#doc_chap1][Gentoo::Handbook::8a-Filesystem-Information]]:
 #+BEGIN_EXAMPLE
   /etc/fstab uses a special syntax. Every line consists of six fields, separated by whitespace (space(s), tabs or a mixture). Each field has its own meaning:
 
@@ -557,7 +556,7 @@ And take [[http://wiki.gentoo.org/wiki/SSD#Mounting][Gentoo::Wiki::SSD::Mounting
   /dev/sda5               /               ext4            defaults,relatime 0 1
   tmpfs                   /tmp            tmpfs           noatime,nodiratime,size=4G 0 0
   # /dev/sdb2, LABEL=DATA1
-  PARTUUID=080cd663-fb32-4cdd-b9d2-42f5ed5a5f45   /mnt    ntfs    defaults,uid=lucifer,gid=users  0       2
+  PARTUUID=080cd663-fb32-4cdd-b9d2-42f5ed5a5f45   /mnt    ntfs    defaults,noatime,uid=lucifer,gid=users  0       2
 #+END_EXAMPLE
 NOTE: Before you mount a ntfs partition, you need ~emerge --ask ntfs3g↲~.
 
@@ -583,7 +582,7 @@ NOTE: Before you mount a ntfs partition, you need ~emerge --ask ntfs3g↲~.
 
   cat /etc/issue↲
 
-  This is \n.\O (\s \m \r) \t
+  This is \n (\s \m \r) \t
 #+END_EXAMPLE
 
 ***** Configuring your Network
