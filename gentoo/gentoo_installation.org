@@ -1,0 +1,701 @@
+#+TITLE: UEFI Windows 8.1 & Gentoo Installation Guide
+#+DATE: [2014-07-04 Fri 15:27]
+#+KEYWORD: gentoo uefi
+#+OPTIONS: H:5
+#+SETUPFILE: ../org-templates/level-1.org
+
+* TODO Use sh scripts to cat related configure files?
+* TODO Add "noatime" to "/dev/sdb2" mount options to improve performance?
+
+* Windows 8.1
+
+** Installation & Activation
+
+*** Installation
+
+**** Download ISO
+
+Download ISO from [[http://msdn.itellyou.cn/?lang=en-us][msdn itellyou]]
+#+BEGIN_EXAMPLE
+  文件名   cn_windows_8.1_with_update_x64_dvd_4048046.iso
+  SHA1    F44B2BBD1F6F243DAAE172FA8C1DB342CB98EDAA
+  文件大小 4GB
+  发布时间 2014-04-08
+
+  ed2k://|file|cn_windows_8.1_with_update_x64_dvd_4048046.iso|4298139648|541A9F2BAF8CD7AA0DBCEACD378320B5|/
+#+END_EXAMPLE
+
+**** Make Bootable USB
+
+Use UltraISO to make a bootable Windows 8.1_u1 USB. In order to boot in UEFI mode, the USB must be *FAT32* format.
+
+**** Turn on UEFI in BIOS
+
+Enter Gigabyte BIOS, in Classic Mode:
+#+BEGIN_EXAMPLE
+  BIOS Features
+  --> Windows 8 Features         Windows 8
+  --> CSM Support                Never     关闭UEFI CSM， 仅支持UEFI BIOS开机程序
+  此选项只有在「Windows 8 Features」设为「Windows 8」时，才能开放设定
+#+END_EXAMPLE
+
+**** Skip Product Key
+
+Normally, a Key is required to proceed Windows 8 installation. It can be skipped as following:
+#+BEGIN_EXAMPLE
+  # Boot with SystemRescueCd
+  # Insert the the newly created Windows 8.1_u1 USB
+
+  lsblk↲
+  sdc      8:32   1   7.5G  0 disk 
+  └─sdc4   8:36   1   7.5G  0 part 
+
+  # Mount the Windows USB
+  mount /dev/sdc4 /mnt↲
+
+  # Browse to the /sources folder
+  cd /sources↲
+
+  # Add a file named ei.cfg
+  cat > ei.cfg <<EOF↲
+  >[EditionID]↲
+  >[Channel]↲
+  >Retail↲
+  >[VL]↲
+  >0↲
+  >EOF↲
+#+END_EXAMPLE
+
+****  Install Windows
+
+Boot with the newly created Windows USB and follow the on screen instructions.
+
+Disks layout(lsblk↲[fn:return_symbol]):
+#+BEGIN_EXAMPLE
+  NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+  sda      8:0    0 232.9G  0 disk 
+  ├─sda1   8:1    0   300M  0 part 
+  ├─sda2   8:2    0   100M  0 part 
+  ├─sda3   8:3    0   128M  0 part 
+  ├─sda4   8:4    0 183.6G  0 part 
+  └─sda5   8:5    0  48.8G  0 part 
+  sdb      8:16   0   2.7T  0 disk 
+  ├─sdb1   8:17   0   128M  0 part 
+  └─sdb2   8:18   0   2.7T  0 part /mnt
+#+END_EXAMPLE
+NOTE: Windows will be installed on /dev/sda4.
+
+*** Activate Windows with your key
+
+Login to [[http://www.microsoftstore.com.cn/][微软中国官方商城]], “订单状况”-->“我的软件下载”-->“密钥”。
+
+
+* Gentoo
+
+** Preparations
+
+*** [[http://www.sysresccd.org/][SystemRescueCd]] [fn:sysresccd]
+
+Make a bootable SystemRescueCd usb. Boot with it!
+
+*** Read [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml][Gentoo Linux AMD64 Handbook]] carefully
+
+** Installation
+
+*** Preparing the disks
+
+If you install Windows 8.1 in pure UEFI mode, the type of partition table is *GPT* by default. Ensure this by running ~parted /dev/sda↲~:
+#+BEGIN_EXAMPLE
+  GNU Parted 3.1
+  Using /dev/sda
+  Welcome to GNU Parted! Type 'help' to view a list of commands.
+  (parted) print                                                            
+  Model: ATA Samsung SSD 840 (scsi)
+  Disk /dev/sda: 250GB
+  Sector size (logical/physical): 512B/512B
+  Partition Table: gpt       <---------------------
+  Disk Flags: 
+
+  Number  Start   End    Size    File system  Name                          Flags
+   1      1049kB  316MB  315MB   ntfs         Basic data partition          hidden, diag
+   2      316MB   420MB  105MB   fat32        EFI system partition          boot
+   3      420MB   555MB  134MB                Microsoft reserved partition  msftres
+   4      555MB   198GB  197GB   ntfs         Basic data partition
+   5      198GB   250GB  52.4GB  ext4         Gentoo root partition
+
+  (parted)
+#+END_EXAMPLE
+As for now, Number 5 partition isn't created yet. So it won't be shown in the output.
+#+BEGIN_EXAMPLE
+  parted /dev/sda5↲
+
+  (parted)unit GB
+  (parted)mkpart primary 198GB -1
+  (parted)name 5 'Gentoo root partition'
+  (parted)quit
+#+END_EXAMPLE
+- unit GB [fn:IEC_binary_unit] :: gigabyte (1000000000 bytes). See [[http://www.gnu.org/software/parted/manual/parted.html#unit][Parted::unit]] for help.
+- -1 :: The offset from the beginning of the disk. "-1" means to the end of the disk.
+
+*** Creating Filesystems
+
+Format the newly created root partition with EXT4, as described in [[http://wiki.gentoo.org/wiki/SSD#Formatting][Gentoo::Wiki::SSD::Formatting]] :
+#+BEGIN_EXAMPLE
+  # Without knowing the erase block size:
+  # Formatting the rootfs partition /dev/sda5:
+  # Using 4096 byte blocks by default aligns the SSD for writes (see [defaults] section of /etc/mke2fs.conf and also 
+  # man mkfs.ext4 about "-b block-size" and "-T usage-type[,...]" inside it):
+
+  mkfs.ext4 -b 4096 /dev/sda5
+  mount -o defaults,relatime /dev/sda5 /mnt/gentoo
+#+END_EXAMPLE
+
+*** Mounting
+
+Mount the new root partition
+#+BEGIN_EXAMPLE
+  mount -o defaults,relatime /dev/sda5 /mnt/gentoo
+#+END_EXAMPLE
+- defaults :: Use default options: rw,suid,dev,exec,auto,nouser and async [fn:mount_manpage]
+- relatime :: Update inode access times relative to modify or change time.[fn:mount_manpage]
+#+BEGIN_QUOTE
+  Update  inode  access  times  relative to modify or change time.
+  Access time is only updated if the previous access time was ear‐
+  lier  than  the current modify or change time. (Similar to noat‐
+  ime, but doesn't break mutt or other applications that  need  to
+  know  if  a  file has been read since the last time it was modi‐
+  fied.)
+
+  Since Linux 2.6.30, the kernel defaults to the behavior provided
+  by this option (unless noatime was  specified), and the stricta‐
+  time option is required  to  obtain  traditional  semantics.  In
+  addition,  since  Linux  2.6.30,  the file's last access time is
+  always  updated  if  it  is more than 1 day old.
+#+END_QUOTE
+
+*** Installing the Gentoo Installation Files
+
+Download stage3 tarball from one of the gentoo mirrors.
+#+BEGIN_EXAMPLE
+  cd /mnt/gentoo
+  wget -c http://mirrors.ustc.edu.cn/gentoo/releases/amd64/current-iso/stage3-amd64-20140619.tar.bz2
+  wget -c http://mirrors.ustc.edu.cn/gentoo/releases/amd64/current-iso/stage3-amd64-20140619.tar.bz2.DIGESTS
+
+  # Verify the tarball with sha512sum/openssl/gpg, e.g. sha512sum: only sha512sum related messages that make sense.
+  sha512sum -c stage3-amd64-20140619.tar.bz2.DIGESTS
+
+  tar xvjpf stage3-amd64-20140619.tar.bz2
+  rm stage3-amd64-20140619.tar.bz2
+#+END_EXAMPLE
+NOTE: Maybe ~stage3-amd64-nomultilib-20140619.tar.bz2~ is preferred. See ~eselect profile set ...~ for further details.
+
+According to [[http://wiki.gentoo.org/wiki/Safe_CFLAGS#Core_i3.2Fi5.2Fi7_with_AVX2_instructions_.28Haswell.29][Gentoo::Wiki::Safe-CFLAGS::HASWELL]], ~# nano -w /mnt/gentoo/etc/portage/make.conf↲~:
+#+BEGIN_EXAMPLE
+  # These settings were set by the catalyst build script that automatically
+  # built this stage.
+  # Please consult /usr/share/portage/config/make.conf.example for a more
+  # detailed example.
+  CFLAGS="-march=core-avx2 -O2 -pipe"
+  CXXFLAGS="${CFLAGS}"
+  # WARNING: Changing your CHOST is not something that should be done lightly.
+  # Please consult http://www.gentoo.org/doc/en/change-chost.xml before changing.
+  CHOST="x86_64-pc-linux-gnu"
+  # These are the USE flags that were used in addition to what is provided by the
+  # profile used for building.
+  USE="bindist mmx sse sse2 sse3 ssse3 sse4_1 X vaapi -gnome -kde"
+  ACCEPT_KEYWORDS="~amd64"
+  VIDEO_CARDS="intel i965"
+
+  # Portage Directories
+  # ===================
+  #
+  # Each of these settings controls an aspect of portage's storage and file
+  # system usage. If you change any of these, be sure it is available when
+  # you try to use portage. *** DO NOT INCLUDE A TRAILING "/" ***
+  #
+  # PORTAGE_TMPDIR is the location portage will use for compilations and
+  #     temporary storage of data. This can get VERY large depending upon
+  #     the application being installed.
+  PORTAGE_TMPDIR=/tmp
+  #
+  # PORTDIR is the location of the portage tree. This is the repository
+  #     for all profile information as well as all ebuilds. If you change
+  #     this, you must update your /etc/portage/make.profile symlink accordingly.
+  #     ***Warning***
+  #     Data stored inside PORTDIR is in peril of being overwritten or deleted by
+  #     the emerge --sync command. The default value of PORTAGE_RSYNC_OPTS
+  #     will protect the default locations of DISTDIR and PKGDIR, but users are
+  #     warned that any other locations inside PORTDIR are not necessarily safe
+  #     for data storage.
+
+  PORTDIR="/usr/portage"
+  # DISTDIR is where all of the source code tarballs will be placed for
+  #     emerges. After packages are built, it is safe to remove any and
+  #     all files from this directory since they will be automatically
+  #     fetched on demand for a given build. If you would like to
+  #     selectively prune obsolete files from this directory, see
+  #     eclean from the gentoolkit package.
+  DISTDIR="${PORTDIR}/distfiles"
+  # PKGDIR is the location of binary packages that you can have created
+  #     with '--buildpkg' or '-b' while emerging a package.
+  PKGDIR="${PORTDIR}/packages"
+
+  # MAKEOPTS provides extra options that may be passed to 'make' when a
+  #     program is compiled. Presently the only use is for specifying
+  #     the number of parallel makes (-j) to perform. The suggested number
+  #     for parallel makes is CPUs+1.
+  # ===================
+  MAKEOPTS="-j5"
+
+  # Portage uses GENTOO_MIRRORS to specify mirrors to use for source retrieval.
+  # The list is a space separated list which is read left to right. If you use
+  # another mirror we highly recommend leaving the default mirror at the end of
+  # the list so that portage will fall back to it if the files cannot be found
+  # on your specified mirror. We _HIGHLY_ recommend that you change this setting
+  # to a nearby mirror by merging and using the 'mirrorselect' tool.
+  GENTOO_MIRRORS="http://mirrors.ustc.edu.cn/gentoo http://mirrors.163.com/gentoo http://distfiles.gentoo.org http://www.ibiblio.org/pub/Linux/distributions/gentoo"
+
+  # Synchronizing Portage
+  # =====================
+  #
+  # Each of these settings affects how Gentoo synchronizes your Portage tree.
+  # Synchronization is handled by rsync and these settings allow some control
+  # over how it is done.
+  #
+  # SYNC is the server used by rsync to retrieve a localized rsync mirror
+  #     rotation. This allows you to select servers that are geographically
+  #     close to you, yet still distribute the load over a number of servers.
+  #     Please do not single out specific rsync mirrors. Doing so places undue
+  #     stress on particular mirrors.  Instead you may use one of the following
+  #     continent specific rotations:
+  #
+  #   Default:       "rsync://rsync.gentoo.org/gentoo-portage"
+  #   North America: "rsync://rsync.namerica.gentoo.org/gentoo-portage"
+  #   South America: "rsync://rsync.samerica.gentoo.org/gentoo-portage"
+  #   Europe:        "rsync://rsync.europe.gentoo.org/gentoo-portage"
+  #   Asia:          "rsync://rsync.asia.gentoo.org/gentoo-portage"
+  #   Australia:     "rsync://rsync.au.gentoo.org/gentoo-portage"
+
+  SYNC="rsync://mirrors.ustc.edu.cn/gentoo-portage"
+
+
+  LINGUAS="en"
+#+END_EXAMPLE
+OPTIONAL: Besides input manually, GENTOO_MIRROR & SYNC can be configured by ~mirrorselect~
+#+BEGIN_EXAMPLE
+  # Using mirrorselect for the GENTOO_MIRRORS variable
+  mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
+
+  # Selecting an rsync mirror using mirrorselect
+  mirrorselect -i -r -o >> /mnt/gentoo/etc/portage/make.conf
+#+END_EXAMPLE
+After running mirrorselect it is adviseable to double-check the settings in ~/mnt/gentoo/etc/portage/make.conf~!
+
+*** Installing the Gentoo Base System
+
+**** Chrooting
+
+Now prepare for chrooting to the new Gentoo system:
+#+BEGIN_EXAMPLE
+  # Copy DNS Info
+  # (The "-L" option is needed to make sure we don't copy a symbolic link)
+  cp -L /etc/resolv.conf /mnt/gentoo/etc
+
+  # Mounting the necessary Filesystems
+  mount -t proc proc /mnt/gentoo/proc
+  mount --rbind /sys /mnt/gentoo/sys
+  mount --rbind /dev /mnt/gentoo/dev
+
+  # Entering the new Environment
+  chroot /mnt/gentoo /bin/bash
+  source /etc/profile
+  export PS1="(chroot) $PS1"
+#+END_EXAMPLE
+
+**** Configuring Portage
+
+#+BEGIN_EXAMPLE
+  # Installing a Portage Snapshot
+  emerge-websync
+
+  # OPTIONAL: Updating the Portage tree to the latest state
+  emerge --sync
+
+  # (If you're using a slow terminal like some framebuffers or a serial
+  # console, you can add the --quiet option to speed up this process:)
+  emerge --sync --quiet
+#+END_EXAMPLE
+If you are warned that a new Portage version is available and that you should update Portage, you should do it now using ~emerge --oneshot portage~. You might also be notified that "news items need reading". More on that next.
+
+#+BEGIN_EXAMPLE
+  # Reading News Items
+  eselect news list
+  eselect news read
+#+END_EXAMPLE
+
+**** Choosing the Right Profile
+
+A profile is a building block for any Gentoo system. Not only does it specify default values for USE, CFLAGS and other important variables, it also locks the system to a certain range of package versions. This is all maintained by the Gentoo developers.
+#+BEGIN_EXAMPLE
+  eselect profile list↲
+
+  Available profile symlink targets:
+    [1]   default/linux/amd64/13.0
+    [2]   default/linux/amd64/13.0/selinux
+    [3]   default/linux/amd64/13.0/desktop
+    [4]   default/linux/amd64/13.0/desktop/gnome
+    [5]   default/linux/amd64/13.0/desktop/gnome/systemd
+    [6]   default/linux/amd64/13.0/desktop/kde
+    [7]   default/linux/amd64/13.0/desktop/kde/systemd
+    [8]   default/linux/amd64/13.0/developer
+    [9]   default/linux/amd64/13.0/no-multilib *
+    [10]  default/linux/amd64/13.0/x32
+    [11]  hardened/linux/amd64
+    [12]  hardened/linux/amd64/selinux
+    [13]  hardened/linux/amd64/no-multilib
+    [14]  hardened/linux/amd64/no-multilib/selinux
+    [15]  hardened/linux/amd64/x32
+    [16]  hardened/linux/uclibc/amd64
+    [17]  hardened/linux/musl/amd64
+
+  eselect profile set 9
+#+END_EXAMPLE
+
+**** Timezone
+
+#+BEGIN_EXAMPLE
+  echo "PRC" > /etc/timezone
+
+  # reconfigure the timezone-data package, which will update the /etc/localtime file 
+  # for us, based on the /etc/timezone entry. The /etc/localtime file is used by the 
+  # system C library to know the timezone the system is in.
+  emerge --config sys-libs/timezone-data
+#+END_EXAMPLE
+
+**** Configure locales
+
+~nano -w /etc/locale.gen↲~
+#+BEGIN_EXAMPLE
+  # /etc/locale.gen: list all of the locales you want to have on your system
+  #
+  # The format of each line:
+  # <locale> <charmap>
+  #
+  # Where <locale> is a locale located in /usr/share/i18n/locales/ and
+  # where <charmap> is a charmap located in /usr/share/i18n/charmaps/.
+  #
+  # All blank lines and lines starting with # are ignored.
+  #
+  # For the default list of supported combinations, see the file:
+  # /usr/share/i18n/SUPPORTED
+  #
+  # Whenever glibc is emerged, the locales listed here will be automatically
+  # rebuilt for you.  After updating this file, you can simply run `locale-gen`
+  # yourself instead of re-emerging glibc.
+
+  #en_US ISO-8859-1
+  en_US.UTF-8 UTF-8
+  #ja_JP.EUC-JP EUC-JP
+  #ja_JP.UTF-8 UTF-8
+  #ja_JP EUC-JP
+  #en_HK ISO-8859-1
+  #en_PH ISO-8859-1
+  #de_DE ISO-8859-1
+  #de_DE@euro ISO-8859-15
+  #es_MX ISO-8859-1
+  #fa_IR UTF-8
+  #fr_FR ISO-8859-1
+  #fr_FR@euro ISO-8859-15
+  #it_IT ISO-8859-1
+  zh_CN.UTF-8 UTF-8
+#+END_EXAMPLE
+The next step is to run locale-gen. It will generates all the locales you have specified in the /etc/locale.gen file. Then set the system-wide locale settings [fn:gentoo_handbook_locale].
+#+BEGIN_EXAMPLE
+  locale-gen↲
+
+  eselect locale list↲
+
+  Available targets for the LANG variable:
+    [1]   C
+    [2]   en_US.utf8 *
+    [3]   POSIX
+    [4]   zh_CN.utf8
+    [ ]   (free form)
+
+  eselect locale set 2↲
+
+  # Reload shell environment
+  env-update && source /etc/profile↲
+  export PS1="(chroot) $PS1"
+#+END_EXAMPLE
+
+*** Configuring the Kernel
+
+**** EFI Configuration
+
+From [[https://wiki.gentoo.org/wiki/EFI_stub_kernel#Kernel][Gentoo::Wiki::EFI-stub-kernel]] :
+#+BEGIN_EXAMPLE
+  Kernel configuration: Enable EFI stub support
+  Processor type and features  --->
+      [*] EFI runtime service support 
+      [*]   EFI stub support
+
+  UEFI does NOT pass kernel parameters to the kernel during normal boot, so you need to hardcode them via CONFIG_CMDLINE.
+  Kernel configuration: Enable built-in kernel parameters
+
+  root# lsblk -o NAME,PARTUUID↲
+
+  NAME   PARTUUID
+  sda    
+  ├─sda1 2932af9a-186c-4d75-974d-73e11222bf30
+  ├─sda2 0d90646c-363a-45db-9f00-e95bacd8938d
+  ├─sda3 e0ad571a-cde0-4ac0-865f-3b0467128d03
+  ├─sda4 bc395e4c-9d4e-46c6-ae04-eaa7f135daf7
+  └─sda5 ba566c9a-c552-4aab-830c-19c8928d2e61  <---------
+  sdb    
+  ├─sdb1 36f3e04e-e057-4537-9871-ce0f6f8ed906
+  └─sdb2 080cd663-fb32-4cdd-b9d2-42f5ed5a5f45
+
+  Kernel configuration: Enable built-in kernel parameters
+  Processor type and features  --->
+      [*] Built-in kernel command line
+      (root=PARTUUID=ba566c9a-c552-4aab-830c-19c8928d2e61)
+
+  Kernel configuration: Enable EFI sysfs controls
+  Firmware Drivers  --->
+      <*> EFI Variable Support via sysfs
+#+END_EXAMPLE
+
+**** Enable XHCI for USB3 support
+
+#+BEGIN_EXAMPLE
+  Device Drivers --->
+      [*] USB support  --->
+          <*>   Support for Host-side USB
+
+          Select a USB HCI driver, e.g.:
+          <*> xHCI HCD (USB 3.0) support (xhci-hcd)  <--------
+          <*> EHCI HCD (USB 2.0) support (ehci-hcd)
+          <*> OHCI HCD support (ohci-hcd)
+          <*> UHCI HCD (most Intel and VIA) support (uhci-hcd)
+#+END_EXAMPLE
+
+**** Compiling the kernel
+
+Full kernel configure file can be seen on [[https://raw.githubusercontent.com/huyuehui/config/master/kernel/.config][github::config::kernel::.config]]:
+#+BEGIN_EXAMPLE
+  emerge gentoo-sources↲
+
+  # Ensure a symlink call "linux" pointing to your linux kernel source
+  ls -l /usr/src/linux↲
+  lrwxrwxrwx 1 root root 19 Jul  3 05:42 /usr/src/linux -> linux-3.15.3-gentoo
+
+  # If your have a running kernel and upgrade to a new kernel, for now you
+  # don't have to change the symlink manually. 'eselect kernel set ...'
+  # would do much of the work for you. Just 'cd' to the new kernel source
+  # directory. e.g. Upgrade from 3.15.2 to 3.15.3:
+  #
+  # cd /usr/src/linux-3.15.3-gentoo↲
+  # cp ../linux-3.15.2-gentoo/.config ./↲
+  # make oldconfig↲
+
+  make menuconfig↲
+
+  make -j5 && make -j5 modules_install
+
+  # Mount the EFI partition created when you install Windows!
+  mount /dev/sda2 /boot
+  mkdir -p /boot/EFI/Gentoo
+
+  cp arch/x86/boot/bzImage /boot/EFI/Gentoo/gentoo64.efi
+#+END_EXAMPLE
+
+**** Setup Gigabyte UEFI Boot
+
+We need efibootmgr to alter the EFI boot manager: ~emerge --ask efibootmgr↲~.
+efibootmgr requires that you boot into UEFI mode /FIRST/! Here we have two options:
+- Use a UEFI enabled bootable USB :: Because our SystemRescueCd USB can't boot into pure UEFI, we need other bootable USBs, e.g. Ubuntu 14.04 LTS.
+- Use the boot manager installed by ~Windows 8.1_u1~ :: 
+  #+BEGIN_EXAMPLE
+    # 1. We are still in chroot environment!
+    mount /dev/sda2 /mnt
+
+    # 2. Backup the original boot manager of Windows 8.1_u1
+    mv /mnt/EFI/Microsoft/Boot/bootmgfw.efi ../
+
+    # 3. Replace the windows boot manager with gentoo's kernel image, which 
+    #    can serve as a boot loader as well.
+    cp /mnt/EFI/Gentoo/gentoox64.efi /mnt/EFI/Microsoft/Boot/bootmgfw.efi
+    umount /mnt
+
+    # 4. Finish the rest installation steps. Reboot with this "fake" EFI stub.
+
+    # 5. BE SURE to restore the original windows boot manager after you
+    #    run efibootmgr to add "Gentoo" to the Gigabyte UEFI Boot Menu.
+  #+END_EXAMPLE
+
+*** Configuring your System
+
+**** Filesystem Information
+
+***** Creating /etc/fstab
+
+Quoted from [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml?part=1&chap=8#doc_chap1][Gentoo::Handbook::8a-Filesystem_Information]]:
+#+BEGIN_EXAMPLE
+  /etc/fstab uses a special syntax. Every line consists of six fields, separated by whitespace (space(s), tabs or a mixture). Each field has its own meaning:
+
+  The first field shows the partition described (the path to the device file)
+  The second field shows the mount point at which the partition should be mounted
+  The third field shows the filesystem used by the partition
+  The fourth field shows the mount options used by mount when it wants to mount the partition. As every filesystem has its own mount options, you are encouraged to read the mount man page (man mount) for a full listing. Multiple mount options are comma-separated.
+  The fifth field is used by dump to determine if the partition needs to be dumped or not. You can generally leave this as 0 (zero).
+  The sixth field is used by fsck to determine the order in which filesystems should be checked if the system wasn't shut down properly. The root filesystem should have 1 while the rest should have 2 (or 0 if a filesystem check isn't necessary).
+  Important: The default /etc/fstab file provided by Gentoo is not a valid fstab file. You have to create your own /etc/fstab.
+#+END_EXAMPLE
+And take [[http://wiki.gentoo.org/wiki/SSD#Mounting][Gentoo::Wiki::SSD::Mounting]] into consideration, I have the following ~/etc/fstab~:
+#+BEGIN_EXAMPLE
+  /dev/sda5               /               ext4            defaults,relatime 0 1
+  tmpfs                   /tmp            tmpfs           noatime,nodiratime,size=4G 0 0
+  # /dev/sdb2, LABEL=DATA1
+  PARTUUID=080cd663-fb32-4cdd-b9d2-42f5ed5a5f45   /mnt    ntfs    defaults,uid=lucifer,gid=users  0       2
+#+END_EXAMPLE
+NOTE: Before you mount a ntfs partition, you need ~emerge --ask ntfs3g↲~.
+
+**** Networking Information
+
+***** Host name, Domainname, etc
+
+#+BEGIN_EXAMPLE
+  ## 1. Setting the host name
+  nano -w /etc/conf.d/hostname↲
+
+  # Set to the hostname of this machine
+  hostname="Hobbiton"
+
+  ## 2. Setting the domainname
+  nano -w /etc/conf.d/net↲
+
+  # Set the dns_domain variable to your domain name
+  dns_domain_lo="homenetwork"
+
+  ## 3. If you choose not to set a domainname, you can get rid of the "This is hostname.(none)" messages 
+  ##    at your login screen by editing /etc/issue. Just delete the string .\O from that file.
+
+  cat /etc/issue↲
+
+  This is \n.\O (\s \m \r) \t
+#+END_EXAMPLE
+
+***** Configuring your Network
+
+#+BEGIN_EXAMPLE
+  # 1. Install netifrc
+  emerge --noreplace netifrc
+
+  # You can read its documents by running:
+  bzless /usr/share/doc/netifrc-0.2.3/net.example.bz2
+
+  # 2. Install dhcpcd
+  emerge --ask dhcpcd
+
+  # 3. All networking information is gathered in /etc/conf.d/net
+  nano -w /etc/conf.d/net↲
+
+  config_enp4s0="dhcp"
+  routes_enp4s0="default via 192.168.1.1"
+
+  # 4. Automatically Start Networking at Boot
+  cd /etc/init.d↲
+  ln -s net.lo net.enp4s0↲
+  rc-update add net.enp4s0 default↲
+
+  # 5. Writing Down Network Information if needed
+  nano -w /etc/hosts↲
+#+END_EXAMPLE
+If you have several network interfaces, you need to create the appropriate net.* files just like you did with net.eth0.
+
+If you later find out the assumption about the network interface name (which we currently document as eth0) was wrong, then
+
+1. update the /etc/conf.d/net file with the correct interface name (like enp3s0 instead of eth0),
+2. create new symbolic link (like /etc/init.d/net.enp3s0),
+3. remove the old symbolic link (rm /etc/init.d/net.eth0),
+4. add the new one to the default runlevel, and
+5. remove the old one using rc-update del net.eth0 default.
+
+**** System Information
+
+#+BEGIN_EXAMPLE
+  ## Setting the root password
+  passwd↲
+
+  ## Configuring services if needed
+  nano -w /etc/rc.conf↲
+
+  ## Opening /etc/conf.d/hwclock
+  nano -w /etc/conf.d/hwclock↲
+
+  # Set CLOCK to "UTC" if your Hardware Clock is set to UTC (also known as
+  # Greenwich Mean Time).  If that clock is set to the local time, then
+  # set CLOCK to "local".  Note that if you dual boot with Windows, then
+  # you should set it to "local".
+  clock="local"
+#+END_EXAMPLE
+
+** Boot into your new Gentoo Linux
+
+*** Cleanup
+
+#+BEGIN_EXAMPLE
+  # 1. Exit chroot environment
+  exit↲
+
+  # 2. Now we are in the original bootable USB!
+  umount -l /mnt/gentoo/dev{/shm,/pts}↲
+  umount -l /mnt/gentoo/proc↲
+  rm /mnt/gentoo/stage3-amd64-20140619.tar.bz2
+
+  # 3. Reboot into your new Gentoo!
+  reboot↲
+#+END_EXAMPLE
+
+*** Alter Gigabyte's UEFI Boot Menu
+
+#+BEGIN_EXAMPLE
+  efibootmgr --help↲
+
+  # Ensure we have booted in UEFI mode
+  dmesg | grep -i efi
+
+  # Pay attention to the back slash in --loader!
+  efibootmgr --create --disk /dev/sda --part 2 --label "Gentoo" --loader "\EFI\Gentoo\gentoox64.efi"
+
+  # Restore the original windows boot manager
+  mount /dev/sda2 /boot
+  mv /boot/EFI/Microsoft/bootmgfw.efi /boot/EFI/Microsoft/Boot/bootmgfw.efi
+  umount /boot
+#+END_EXAMPLE
+
+* Footnotes
+
+[fn:return_symbol] ~ctrl+x 8 Enter↲~ or ~M+x insert-char↲~. Input: ~DOWNWARDS ARROW WITH TIP LEFTWARDS~ or ~21b2~
+
+[fn:sysresccd] Based on Gentoo, thus contains all the utilities you need during Gentoo installation, this is the biggest advantage of using SystemRescueCd. The disadvantage is, as of 4.2.0, it doesn't support pure UEFI boot. If you disable "CSM Support" in BIOS, the boot menu of Gigabyte UEFI BIOS(Press *F12* in boot logo) can't find your SystemRescueCd usb. So in BIOS(Classic Mode):
+#+BEGIN_EXAMPLE
+  BIOS Features
+  --> Windows 8 Features         Other OS
+  --> Boot Mode Selection        UEFI and Legacy
+#+END_EXAMPLE
+
+[fn:IEC_binary_unit] According to [[http://www.gnu.org/software/parted/manual/parted.html#IEC-binary-units][IEC binary unit]], "*MiB*" should be used?
+#+BEGIN_QUOTE
+Note that as of parted-2.4, when you specify start and/or end values using IEC binary units like “MiB”, “GiB”, “TiB”, etc., parted treats those values as exact, and equivalent to the same number specified in bytes (i.e., with the “B” suffix), in that it provides no “helpful” range of sloppiness. Contrast that with a partition start request of “4GB”, which may actually resolve to some sector up to 500MB before or after that point. Thus, when creating a partition, you should prefer to specify units of bytes (“B”), sectors (“s”), or IEC binary units like “MiB”, but not “MB”, “GB”, etc.
+#+END_QUOTE
+
+[fn:mount_manpage] ~man mount~
+
+[fn:gentoo_handbook_locale] Manually, this can still be accomplished through the ~/etc/env.d/02locale~ file:
+#+BEGIN_EXAMPLE
+  # Setting the default system locale in /etc/env.d/02locale
+  LANG="en_US.utf8"
+#+END_EXAMPLE
+
