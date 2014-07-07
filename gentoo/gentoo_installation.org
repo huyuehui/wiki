@@ -88,7 +88,6 @@ NOTE: Windows will be installed on /dev/sda4.
 
 Login to [[http://www.microsoftstore.com.cn/][微软中国官方商城]], “订单状况”-->“我的软件下载”-->“密钥”。
 
-
 * Gentoo
 
 ** Preparations
@@ -511,7 +510,7 @@ Full kernel configure file can be seen on [[https://raw.githubusercontent.com/hu
 
 **** Setup Gigabyte UEFI Boot
 
-We need efibootmgr to alter the EFI boot manager: ~emerge --ask efibootmgr↲~.
+Gigabyte UEFI Boot Manager can't find our ~gentoox64.efi~. Maybe there is some default search paths [fn:reFInd]? So we need efibootmgr to alter the EFI boot manager: ~emerge --ask efibootmgr↲~.
 efibootmgr requires that you boot into UEFI mode /FIRST/! Here we have two options:
 - Use a UEFI enabled bootable USB :: Because our SystemRescueCd USB can't boot into pure UEFI, we need other bootable USBs, e.g. Ubuntu 14.04 LTS.
 - Use the boot manager installed by ~Windows 8.1_u1~ :: 
@@ -697,4 +696,7 @@ Note that as of parted-2.4, when you specify start and/or end values using IEC b
   # Setting the default system locale in /etc/env.d/02locale
   LANG="en_US.utf8"
 #+END_EXAMPLE
+
+[fn:reFInd] [[http://www.rodsbooks.com/refind/][reFInd]] seems a powerful EFI boot manager.
+
 
