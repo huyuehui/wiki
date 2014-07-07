@@ -1,6 +1,6 @@
 #+TITLE: UEFI Windows 8.1 & Gentoo Installation Guide
 #+DATE: [2014-07-04 Fri 15:27]
-#+KEYWORD: gentoo uefi
+#+KEYWORDS: gentoo uefi
 #+OPTIONS: H:5
 #+SETUPFILE: ../org-templates/level-1.org
 
@@ -663,20 +663,20 @@ If you later find out the assumption about the network interface name (which we 
   efibootmgr --help↲
 
   # Ensure we have booted in UEFI mode
-  dmesg | grep -i efi
+  dmesg | grep -i efi↲
 
   # Pay attention to the back slash in --loader!
-  efibootmgr --create --disk /dev/sda --part 2 --label "Gentoo" --loader "\EFI\Gentoo\gentoox64.efi"
+  efibootmgr --create --disk /dev/sda --part 2 --label "Gentoo" --loader "\EFI\Gentoo\gentoox64.efi"↲
 
   # Restore the original windows boot manager
-  mount /dev/sda2 /boot
-  mv /boot/EFI/Microsoft/bootmgfw.efi /boot/EFI/Microsoft/Boot/bootmgfw.efi
-  umount /boot
+  mount /dev/sda2 /boot↲
+  mv /boot/EFI/Microsoft/bootmgfw.efi /boot/EFI/Microsoft/Boot/bootmgfw.efi↲
+  umount /boot↲
 #+END_EXAMPLE
 
 * Footnotes
 
-[fn:return_symbol] ~ctrl+x 8 Enter↲~ or ~M+x insert-char↲~. Input: ~DOWNWARDS ARROW WITH TIP LEFTWARDS~ or ~21b2~
+[fn:return_symbol] ~ctrl+x 8 Enter↲~ or ~M+x insert-char↲~. Input: ~DOWNWARDS ARROW WITH TIP LEFTWARDS↲~ or ~21b2↲~
 
 [fn:sysresccd] Based on Gentoo, thus contains all the utilities you need during Gentoo installation, this is the biggest advantage of using SystemRescueCd. The disadvantage is, as of 4.2.0, it doesn't support pure UEFI boot. If you disable "CSM Support" in BIOS, the boot menu of Gigabyte UEFI BIOS(Press *F12* in boot logo) can't find your SystemRescueCd usb. So in BIOS(Classic Mode):
 #+BEGIN_EXAMPLE
