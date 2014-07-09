@@ -187,7 +187,7 @@ Download stage3 tarball from one of the gentoo mirrors.
 #+END_EXAMPLE
 NOTE: Maybe ~stage3-amd64-nomultilib-20140619.tar.bz2~ is preferred. See ~eselect profile set ...~ for further details.
 
-According to [[http://wiki.gentoo.org/wiki/Safe_CFLAGS#Core_i3.2Fi5.2Fi7_with_AVX2_instructions_.28Haswell.29][Gentoo::Wiki::Safe-CFLAGS::HASWELL]], ~# nano -w /mnt/gentoo/etc/portage/make.conf↲~:
+According to [[http://wiki.gentoo.org/wiki/Safe_CFLAGS#Core_i3.2Fi5.2Fi7_with_AVX2_instructions_.28Haswell.29][Gentoo::Wiki::Safe-CFLAGS::HASWELL]], ~nano -w /mnt/gentoo/etc/portage/make.conf↲~:
 #+BEGIN_EXAMPLE
   # These settings were set by the catalyst build script that automatically
   # built this stage.
@@ -279,7 +279,7 @@ According to [[http://wiki.gentoo.org/wiki/Safe_CFLAGS#Core_i3.2Fi5.2Fi7_with_AV
 
   LINGUAS="en"
 #+END_EXAMPLE
-OPTIONAL: Besides input manually, GENTOO_MIRROR & SYNC can be configured by ~mirrorselect~
+OPTIONAL: Besides input manually, GENTOO_MIRROR & SYNC can be configured by ~mirrorselect~ [fn:mirrorselect]
 #+BEGIN_EXAMPLE
   # Using mirrorselect for the GENTOO_MIRRORS variable
   mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
@@ -690,6 +690,8 @@ Note that as of parted-2.4, when you specify start and/or end values using IEC b
 #+END_QUOTE
 
 [fn:mount_manpage] ~man mount~
+
+[fn:mirrorselect] Only included in Livecd, not in SystemRescueCd?
 
 [fn:gentoo_handbook_locale] Manually, this can still be accomplished through the ~/etc/env.d/02locale~ file:
 #+BEGIN_EXAMPLE
