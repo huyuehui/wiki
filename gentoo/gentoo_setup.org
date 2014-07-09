@@ -1,0 +1,69 @@
+#+TITLE: Gentoo Linux Setup Guide
+#+DATE: [2014-07-07 Mon 16:32]
+#+KEYWORDS: gentoo
+#+SETUPFILE: ../org-templates/level-1.org
+
+* User Administration
+
+** Adding a User for Daily Use
+
+The following table lists a number of important groups you might wish to use:
+| Group | Description                                                                |
+|-------+----------------------------------------------------------------------------|
+| audio | be able to access the audio devices                                        |
+|-------+----------------------------------------------------------------------------|
+| usb   | be able to access USB devices                                              |
+|-------+----------------------------------------------------------------------------|
+| video | be able to access video capturing hardware and doing hardware acceleration |
+|-------+----------------------------------------------------------------------------|
+| users | group for normal users                                                     |
+|-------+----------------------------------------------------------------------------|
+| wheel | be able to use su                                                          |
+
+#+BEGIN_EXAMPLE
+  # Login as root first
+  Login: root↲
+  Password: (Your root password)↲
+
+  # -m, --create-home; -G, --groups; -s, --shell
+  useradd -m -G audio,usb,video,users,wheel -s /bin/bash (Your user name)↲
+
+  passwd (Your user name)↲
+  Password: (Enter the password)↲
+  Re-enter password: (Re-enter the password to verify)↲
+#+END_EXAMPLE
+
+* Keep your Gentoo up to date
+
+** Rolling Update in Gentoo
+
+According to [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml?part=2&chap=1][A Portage Introduction]]:
+#+BEGIN_EXAMPLE
+  # Updates  repositories
+  emerge --sync
+
+  # Updates system
+  emerge --update --ask --deep --with-bdeps=y @world
+  # If any of your USE flags has been altered, add "--newuse or -N" as well.
+  # In abbreviation:
+  emerge -uaDN --with-bdeps=y @world
+
+  # Cleans the system by removing packages that are not associated
+  # with explicitly merged packages.
+  emerge --depclean --ask
+  # emerge -ca
+#+END_EXAMPLE
+
+** Upgrading Kernel
+
+
+
+* Installing software
+
+** Necessary System Tools
+
+** Applications
+
+* TODO Update Gigabyte BIOS
+
+每次升级BIOS后，需要重新使用efibootmgr修改UEFI Boot Menu。详见上一篇文档。
