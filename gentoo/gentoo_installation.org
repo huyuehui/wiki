@@ -479,6 +479,9 @@ From [[https://wiki.gentoo.org/wiki/EFI_stub_kernel#Kernel][Gentoo::Wiki::EFI-st
 #+END_EXAMPLE
 
 **** Compiling the kernel
+     :PROPERTIES:
+     :CUSTOM_ID: CompilingKernel
+     :END:
 
 Full kernel configure file can be seen on [[https://raw.githubusercontent.com/huyuehui/config/master/kernel/.config][github::config::kernel::.config]]:
 #+BEGIN_EXAMPLE
