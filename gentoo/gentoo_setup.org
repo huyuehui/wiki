@@ -8,7 +8,10 @@
 ** Adding a User for Daily Use
 
 The following table lists a number of important groups you might wish to use:
+#+ATTR_HTML: :frame border
 | Group | Description                                                                |
+|-------+----------------------------------------------------------------------------|
+| /     | <>                                                                         |
 |-------+----------------------------------------------------------------------------|
 | audio | be able to access the audio devices                                        |
 |-------+----------------------------------------------------------------------------|
@@ -33,6 +36,80 @@ The following table lists a number of important groups you might wish to use:
   Re-enter password: (Re-enter the password to verify)↲
 #+END_EXAMPLE
 
+* Using Portage
+
+** Specify Package Versions
+
+According to [[http://wiki.gentoo.org/wiki/Version_specifier][Version Specifier]], we have:
+1. Basic
+   + category/package :: Matches any version of a package.
+2. By Version
+   + ~category/package-1.23 :: Matches version and any revision.
+   + =category/package-1.23* :: Matches a version by the version range. Note that there's no "." before the "*".
+   + =category/package-1.23 :: Matches a version exactly.
+   + >=category/package-1.23 :: Matches the specified version or any higher version.
+   + >category/package-1.23 :: Matches a version strictly later than specified.
+   + <category/package-1.23 :: Matches a version strictly older than specified.
+   + <=category/package-1.23 :: Matches the specified version or any older version.
+3. By Slot
+   + category/package:2 :: Matches package in the specified package SLOT. Note that there is no prefix.
+4. By Overlay
+   + category/package::overlay :: Matches a package from a specific overlay. This can be combined with other specifiers. The official portage tree is ::gentoo.
+
+** Local Portage Configure Files
+
+*** package.use/*
+
+As for now, [2014-07-10 Thu 16:35], libav-10.2 & mpv-0.4.0 have been hard masked. Unmask them as following:
+#+BEGIN_EXAMPLE
+  cd /etc/portage/package.unmask↲
+
+  cat libav↲
+
+  >=media-video/libav-10
+
+  cat mpv
+
+  >=media-video/mpv-0.4
+#+END_EXAMPLE
+
+*** package.license
+
+google-chrome requires explicit license acknowledgement:
+#+BEGIN_EXAMPLE
+  cat /etc/portage/package.license↲
+
+  >=www-client/google-chrome-35.0.1916.114_p1 google-chrome
+#+END_EXAMPLE
+
+*** package.use
+
+Custom USE flags for individual package:
+#+BEGIN_EXAMPLE
+  cat /etc/portage/package.use↲
+
+  >=dev-libs/libxml2-2.9.1-r4 python
+  >=x11-wm/fvwm-2.6.5 png truetype
+  >=x11-terms/rxvt-unicode-9.20 256-color xft alt-font-width -vanilla perl
+  >=sys-libs/zlib-1.2.8-r1 minizip
+  >=media-libs/harfbuzz-0.9.23 icu
+  >=dev-libs/libxml2-2.9.1-r4 icu
+  >=app-arch/p7zip-9.20.1 rar
+  ~app-editors/emacs-24.3 gif jpeg png svg tiff xft
+  >=x11-libs/libva-1.3.1 opengl
+  >=media-libs/mesa-10.2 dri3
+  >=dev-vcs/git-2.0 -perl -python
+  #>=media-video/libav-9 avx threads truetype vorbis vpx x264 xvid
+  >=media-video/libav-10 avx avx2 alsa threads truetype vorbis vpx x264 xvid
+  >=media-video/mpv-0.3.10 bluray dvdnav jpeg lua -xscreensaver -xv
+  #google-chrome
+  >=app-text/ghostscript-gpl-9.14 cups
+  #goagent
+  >=dev-libs/nss-3.16 utils
+  #golang
+  >=dev-lang/go-1.2.2 emacs
+#+END_EXAMPLE
+
 * Keep your Gentoo up to date
 
 ** Rolling Update in Gentoo
@@ -40,23 +117,52 @@ The following table lists a number of important groups you might wish to use:
 According to [[http://www.gentoo.org/doc/en/handbook/handbook-amd64.xml?part=2&chap=1][A Portage Introduction]]:
 #+BEGIN_EXAMPLE
   # Updates  repositories
-  emerge --sync
+  emerge --sync↲
 
   # Updates system
-  emerge --update --ask --deep --with-bdeps=y @world
+  emerge --update --ask --deep --with-bdeps=y @world↲
   # If any of your USE flags has been altered, add "--newuse or -N" as well.
   # In abbreviation:
-  emerge -uaDN --with-bdeps=y @world
+  emerge -uaDN --with-bdeps=y @world↲
 
   # Cleans the system by removing packages that are not associated
   # with explicitly merged packages.
-  emerge --depclean --ask
-  # emerge -ca
+  emerge --depclean --ask↲
+  # In abbreviation:
+  # emerge -ca↲
 #+END_EXAMPLE
 
 ** Upgrading Kernel
 
+Whenever ~sys-kernel/gentoo-sources~ has been updated, new kernel source will be installed at ~/usr/src/linux-X.Y.Z-gentoo~
+#+BEGIN_EXAMPLE
+  cd /usr/src/linux-X.Y.Z-gentoo↲
+  cp ../linux/.config ./↲
 
+  make oldconfig↲
+  ## make menuconfig↲  # If necessary.
+
+  make -j5 && make -j5 modules_install↲
+
+  mount /dev/sdb2 /boot↲
+  cp arch/x86/boot/bzImage /boot/EFI/Gentoo/gentoox64.efi↲
+  umount /boot↲
+
+  reboot↲
+
+  # Verify the new kernel is working fine!
+
+  # Use eselect to switch kernel!
+  eselect kernel list↲
+  # New kernel sits at number 2:
+  eselect kernel set 2↲
+
+  # Clean up the old kernel
+  emerge --depclean --ask↲
+  rm -r /usr/src/linux-(Old Kernel)-gentoo↲
+  rm -r /lib/modules/(Old Kernel)-gentoo↲
+#+END_EXAMPLE
+NOTE: See [[https://wiki.gentoo.org/wiki/Kernel/Configuration][Gentoo::Wiki::Kernel/Configuration]], [[http://wiki.gentoo.org/wiki/Kernel/Removal][Gentoo::Wiki::Kernel/Removal]], [[file:gentoo_installation.org::#CompilingKernel][Compiling Kernel]] for further details.
 
 * Installing software
 
