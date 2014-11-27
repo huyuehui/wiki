@@ -431,7 +431,7 @@ The next step is to run locale-gen. It will generates all the locales you have s
 
 **** EFI Configuration
 
-From [[https://wiki.gentoo.org/wiki/EFI_stub_kernel#Kernel][Gentoo::Wiki::EFI-stub-kernel]] :
+From [[https://wiki.gentoo.org/wiki/EFI_stub_kernel#Kernel][Gentoo::Wiki::EFI-stub-kernel]] & [[https://wiki.archlinux.org/index.php/UEFI#UEFI_Variables_Support_in_Linux_Kernel][Arch::Wiki::UEFI Variables Support in Linux Kernel]] :
 #+BEGIN_EXAMPLE
   Kernel configuration: Enable EFI stub support
   Processor type and features  --->
@@ -459,9 +459,14 @@ From [[https://wiki.gentoo.org/wiki/EFI_stub_kernel#Kernel][Gentoo::Wiki::EFI-st
       [*] Built-in kernel command line
       (root=PARTUUID=ba566c9a-c552-4aab-830c-19c8928d2e61)
 
-  Kernel configuration: Enable EFI sysfs controls
+  Kernel configuration: Disable EFI sysfs controls
   Firmware Drivers  --->
-      <*> EFI Variable Support via sysfs
+      <> EFI Variable Support via sysfs
+
+  Kernel configuration: Enable EFI Variable filesystem
+  File systems  --->
+      Miscellaneous filesystems  --->
+          <*> EFI Variable filesystem
 #+END_EXAMPLE
 
 **** Enable XHCI for USB3 support
