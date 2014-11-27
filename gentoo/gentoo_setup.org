@@ -168,6 +168,47 @@ NOTE: See [[https://wiki.gentoo.org/wiki/Kernel/Configuration][Gentoo::Wiki::Ker
 
 ** Necessary System Tools
 
+*** Java
+
+According to [[http://wiki.gentoo.org/wiki/Java][Gentoo::Wiki::Java]], to install ~icedtea-bin~:
+#+BEGIN_EXAMPLE
+  /etc/portage/package.use:
+  >=dev-java/icedtea-bin-7 -cups
+
+  emerge --ask icedtea-bin↲
+#+END_EXAMPLE
+
+For the time being[2014-10-26 Sun 06:21], ~icedtea-bin~ doesn't have built-in ~LucidaSansRegular.ttf~ font, which is required by ~libbluray~ to enable its BD-J support. Install ~LucidaSansRegular.ttf~ to ~~/.fonts~ can temporarily fix this issue. But still got some errors to play complex BD-J menus(BD-Live 2.0?). 
+
+To install ~oracle-jdk-bin~:
+
+#+BEGIN_EXAMPLE
+  emerge --pretend oracle-jdk-bin↲
+
+  Calculating dependencies... done!
+  [ebuild  N F   ] dev-java/oracle-jdk-bin-1.8.0.25  USE="X fontconfig -alsa (-aqua) -derby -doc -examples -jce -nsplugin -pax_kernel (-selinux) -source" 
+
+  Fetch instructions for dev-java/oracle-jdk-bin-1.8.0.25:
+   ,* 
+   ,* Oracle requires you to download the needed files manually after
+   ,* accepting their license through a javascript capable web browser.
+   ,* 
+   ,* Download the following files:
+   ,*   jdk-8u25-linux-x64.tar.gz
+   ,* at 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html'
+   ,* and move them to '/usr/portage/distfiles'
+   ,* 
+
+  The following license changes are necessary to proceed:
+   (see "package.license" in the portage(5) man page for more details)
+  # required by oracle-jdk-bin (argument)
+  >=dev-java/oracle-jdk-bin-1.8.0.25 Oracle-BCLA-JavaSE
+
+
+  Follow the instructions, then:
+  emerge --ask oracle-jdk-bin↲
+#+END_EXAMPLE
+
 ** Applications
 
 * TODO Update Gigabyte BIOS
