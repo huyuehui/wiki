@@ -185,25 +185,31 @@ To install ~oracle-jdk-bin~:
 #+BEGIN_EXAMPLE
   emerge --pretend oracle-jdk-bin↲
 
-  Calculating dependencies... done!
-  [ebuild  N F   ] dev-java/oracle-jdk-bin-1.8.0.25  USE="X fontconfig -alsa (-aqua) -derby -doc -examples -jce -nsplugin -pax_kernel (-selinux) -source" 
+  These are the packages that would be merged, in order:
 
-  Fetch instructions for dev-java/oracle-jdk-bin-1.8.0.25:
+  Calculating dependencies... done!
+  [ebuild  N F   ] dev-java/oracle-jdk-bin-1.8.0.45  USE="X fontconfig -alsa (-aqua) -derby -doc -examples -jce -nsplugin -pax_kernel (-selinux) -source" 
+
+  Fetch instructions for dev-java/oracle-jdk-bin-1.8.0.45:
    ,* 
    ,* Oracle requires you to download the needed files manually after
    ,* accepting their license through a javascript capable web browser.
    ,* 
    ,* Download the following files:
-   ,*   jdk-8u25-linux-x64.tar.gz
+   ,*   jdk-8u45-linux-x64.tar.gz
    ,* at 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html'
    ,* and move them to '/usr/portage/distfiles'
+   ,* 
+   ,* If the above mentioned urls do not point to the correct version anymore,
+   ,* please download the files from Oracle's java download archive:
+   ,* 
+   ,*    http://www.oracle.com/technetwork/java/javase/downloads/java-archive-javase8-2177648.html#jdk-8u45-oth-JPR
    ,* 
 
   The following license changes are necessary to proceed:
    (see "package.license" in the portage(5) man page for more details)
   # required by oracle-jdk-bin (argument)
-  >=dev-java/oracle-jdk-bin-1.8.0.25 Oracle-BCLA-JavaSE
-
+  >=dev-java/oracle-jdk-bin-1.8.0.45 Oracle-BCLA-JavaSE
 
   Follow the instructions, then:
   emerge --ask oracle-jdk-bin↲
@@ -211,6 +217,36 @@ To install ~oracle-jdk-bin~:
 
 ** Applications
 
+*** FFmpeg vs. Libav
+
+Because ~mpv~[fn:1] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, we will switch from Libav to FFmpeg.
+
+#+BEGIN_EXAMPLE
+  emerge --unmerge mpv↲
+  emerge --unmerge libav↲
+
+  # Clean their configuration
+  rm /etc/portage/package.unmask/libav↲
+  # Make sure 'libav' has not been unmasked
+  rm -r /etc/portage/profile↲
+
+  # Adjust USE flags
+  >=media-video/ffmpeg-2.7 aac alsa fontconfig opengl truetype vorbis
+  >=media-video/mpv-0.7.3 bluray dvdnav jpeg lua -xscreensaver -xv
+
+  # FFmpeg will be pulled in by mpv automatically
+  emerge --ask mpv↲
+
+  # Clean package dependencies
+  emerge --depclean↲
+
+#+END_EXAMPLE
+
 * TODO Update Gigabyte BIOS
 
 每次升级BIOS后，需要重新使用efibootmgr修改UEFI Boot Menu。详见上一篇文档。
+
+* Footnotes
+
+[fn:1] [[https://github.com/mpv-player/mpv#ffmpeg-vs-libav][FFmpeg vs. Libav]]
+
