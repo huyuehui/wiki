@@ -1,0 +1,60 @@
+#+TITLE: Notes on The Go Programming Language
+#+DATE: [2016-06-15 Wed 10:53]
+#+KEYWORDS: gopl golang
+#+SETUPFILE: ../org-templates/level-1.org
+
+* Exercise 6.5[fn:1]
+The type of each word used  by IntSet is uint64, but 64-bit arithmetic
+may be inefficient on a 32-bit platform. Modify the program to use the
+uint type, which  is the most efficient unsigned integer  type for the
+platform. Instead  of dividing  by 64, define  a constant  holding the
+effective size  of uint  in bits, 32  or 64. You  can use  the perhaps
+too-clever expression ~32 << (^uint(0) >> 63)~ for this purpose.
+
+** ^
+The operator  ^ is bitwise  exclusive OR (XOR)  when used as  a binary
+operator,  but when  used as  a unary  prefix operator  it is  bitwise
+negation or complement;  that is, it returns a value  with each bit in
+its operand inverted.[fn:2]
+
+** Operator Precedence
+Unary operators have the highest precedence:[fn:3]
+~(^uint(0) >> 63)~ is the same as ~((^uint(0)) >> 63)~
+
+** ~32 << (^uint(0) >> 63)~
+If uint is 32-bit,  this expression equals to ~32 << 0  = 32~. If uint
+is 64-bit, it equals to ~32 << 1 = 64~
+
+* Caveat: An Interface Containing a Nil Pointer Is Non-Nil[fn:4]
+~var w io.Writer~
+In Go, variables  are always initialized to a  well-defined value, and
+interfaces are no exception. The zero  value for an interface has both
+its type and value components set to nil.(Figure 7.1)
+
+An  interface value  is  described  as nil  or  non-nil  based on  its
+*dynamic* type, so this is a nil interface value.[fn:6]
+
+"A  variable of  interface  type  stores a  pair:  the concrete  value
+assigned to the variable, and that value's type descriptor. To be more
+precise,  the  value  is  the   underlying  concrete  data  item  that
+implements the interface and the type  describes the full type of that
+item."[fn:5]
+
+* Footnotes
+
+[fn:6] Alan  A.A.Donovan  &  Brian W.Kernighan  "The  Go  Programming
+Language" pp. 182
+
+[fn:5] Rob Pike "The Laws of Reflection"
+
+[fn:4]  Alan  A.A.Donovan  &  Brian W.Kernighan  "The  Go  Programming
+Language" §7.5.1 pp. 184
+
+[fn:1]  Alan  A.A.Donovan  &  Brian W.Kernighan  "The  Go  Programming
+Language" pp.168
+
+[fn:2]  Alan  A.A.Donovan  &  Brian W.Kernighan  "The  Go  Programming
+Language" pp. 53
+
+[fn:3] [[https://golang.org/ref/spec#Operators][Go Spec: Operator precendence]]
+
