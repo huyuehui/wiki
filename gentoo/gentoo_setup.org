@@ -110,6 +110,43 @@ Custom USE flags for individual package:
   >=dev-lang/go-1.2.2 emacs
 #+END_EXAMPLE
 
+** Overlay
+
+*** External Overlay
+Use visual-studio-code as example:
+#+BEGIN_EXAMPLE
+  FILE: /etc/portage/repos.conf/jorgicio.conf
+
+  [jorgicio]
+  priority = 10
+  location = /usr/local/overlay/jorgicio
+  sync-type = git
+  sync-uri = git://github.com/jorgicio/jorgicio-gentoo.git
+  auto-sync = no
+#+END_EXAMPLE
+Bypass all packages except ~visual-studio-code~ in this overlay:
+#+BEGIN_EXAMPLE
+  /etc/portage/package.mask:
+
+  ,*/*::jorgicio
+
+  /etc/portage/package.unmask/visual-studio-code:
+
+  app-editors/visual-studio-code::jorgicio
+#+END_EXAMPLE
+Before you sync the external overlay for the first time, Portage will report this warning:
+#+BEGIN_EXAMPLE
+  !!! Repository 'jorgicio' is missing masters attribute in '/usr/local/overlay/jorgicio/metadata/layout.conf'
+  !!! Set 'masters = gentoo' in this file for future compatibility
+  WARNING: One or more repositories have missing repo_name entries:
+
+	  /usr/local/overlay/jorgicio/profiles/repo_name
+
+  NOTE: Each repo_name entry should be a plain text file containing a
+  unique name for the repository on the first line.
+#+END_EXAMPLE
+It should be dispeared after you sync it: ~emaint sync -r jorgicio~
+
 * Keep your Gentoo up to date
 
 ** Rolling Update in Gentoo
