@@ -173,7 +173,7 @@ According to [[http://orgmode.org/org.html#Code-evaluation-security][Code Evalua
 * magit
 -----
 ** Installation
-=M-x el-get-install magit=
+=M-x el-get-install magit=[fn:magit_update]
 ** Useage
 The following is a simple reference card[fn:magit]:
 #+BEGIN_EXAMPLE
@@ -207,6 +207,7 @@ In your =~/.emacs.d/init.el=, add the following lines:
   (add-to-list 'load-path "~/.emacs.d/ob-go-master")
   (require 'ob-go)
 #+END_SRC
+
 * Footnotes
 
 [fn:el-get] Mostly copy&paste from [[https://github.com/dimitri/el-get][El-Get's README.md]]
@@ -215,7 +216,8 @@ In your =~/.emacs.d/init.el=, add the following lines:
 
 [fn:org_language] [[http://orgmode.org/org.html#Languages][Languages support in Babel]]
 
+[fn:magit_update] According to [[https://magit.vc/manual/magit/Updating-from-an-older-release.html#Updating-from-an-older-release][Updating Magit from an older release]], maybe you should first uninstall Magit and some of its dependencies and restart Emacs before installing the latest release. As of [2016-08-29 Mon 21:59], update magit from 1.2.0 to 2.8.0 requires uninstallation first.
+
 [fn:magit] See [[http://magit.github.io/master/magit.html][Magit User Manual]] for details.
 
 [fn:align_regexp_justify] Quoted from =align-rules-list= variable description: It is possible with `regexp' and `group' to identify a character group that contains more than just whitespace characters.  By default, any non-whitespace characters in that group will also be deleted while aligning the alignment character.  However, if the `justify' attribute is set to a non-nil value, only the initial whitespace characters within that group will be deleted.  This has the effect of right-justifying the characters that remain, and can be used for outdenting or just plain old right-justification.
-

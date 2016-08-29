@@ -18,7 +18,7 @@
 |   | emacs: magit    | 1.2.0-2312-gf2d3564                                            |
 |---+-----------------+----------------------------------------------------------------|
 |   | git             | 1.9.2                                                          |
-#+TBLFM: @4$3='(let ((ver-str (emacs-version))) (progn (string-match "\\(.*)\\)" ver-str) (match-string 1 ver-str)))::@5$3='(el-get-version)::@6$3='(let* ((long-ver (org-version nil "FULL")) (short-ver (progn (string-match "(\\(.*\\) @" long-ver) (match-string 1 long-ver)))) (replace-regexp-in-string "_" "-" short-ver))::@7$3='(magit-version)
+#+TBLFM: @4$3='(let ((ver-str (emacs-version))) (progn (string-match "\\(.*\\)" ver-str) (match-string 1 ver-str)))::@5$3='(el-get-version)::@6$3='(let* ((long-ver (org-version nil "FULL")) (short-ver (progn (string-match "(\\(.*\\) @" long-ver) (match-string 1 long-ver)))) (replace-regexp-in-string "_" "-" short-ver))::@7$3='(magit-version)
 
 * Sitemap
 #+INCLUDE: "sitemap.org" :lines "2-" ;;skip #+TITLE

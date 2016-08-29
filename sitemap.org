@@ -7,6 +7,7 @@
      + [[file:gentoo/gentoo_installation.org][UEFI Windows 8.1 & Gentoo Installation Guide]]
    + golang
      + [[file:golang/golang_refspec_notes.org][Notes on Go's Language Specification]]
+     + [[file:golang/gopl.org][Notes on The Go Programming Language]]
    + mpv
      + [[file:mpv/mpv_update.org][mpv's update script]]
    + [[file:index.org][My Knowledge Base]]

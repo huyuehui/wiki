@@ -145,7 +145,12 @@ Before you sync the external overlay for the first time, Portage will report thi
   NOTE: Each repo_name entry should be a plain text file containing a
   unique name for the repository on the first line.
 #+END_EXAMPLE
-It should be dispeared after you sync it: ~emaint sync -r jorgicio~
+It should be dispeared after you sync it:
+#+BEGIN_EXAMPLE
+  emaint sync -r jorgicio↲
+
+  emerge --ask visual-studio-code↲
+#+END_EXAMPLE
 
 * Keep your Gentoo up to date
 
@@ -253,6 +258,10 @@ To install ~oracle-jdk-bin~:
 #+END_EXAMPLE
 
 ** Applications
+
+*** Visual Studio Code
+Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo/tree/master/app-editors/visual-studio-code][jorgicio: visual-studio-code 1.4.0]].
+See [[*External Overlay][External Overlay]]
 
 *** FFmpeg vs. Libav
 
