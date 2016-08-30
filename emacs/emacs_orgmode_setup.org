@@ -11,7 +11,7 @@ Use the Master Branch. Evaluating this code after copying it into your =*scratch
   ;; So the idea is that you copy/paste this code into your *scratch* buffer,
   ;; hit C-j, and you have a working el-get.
   (url-retrieve
-   "https://raw.github.com/dimitri/el-get/master/el-get-install.el"
+   "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el"
    (lambda (s)
      (goto-char (point-max))
      (eval-print-last-sexp)))
@@ -26,12 +26,10 @@ In =~/.emacs.d/init.el=, add the following code:
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
 
-  (setq el-get-user-package-directory "~/.emacs.d/el-get/el-get-init-files")
-
   (unless (require 'el-get nil 'noerror)
     (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.github.com/dimitri/el-get/master/el-get-install.el")
+	(url-retrieve-synchronously
+	 "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
       (goto-char (point-max))
       (eval-print-last-sexp)))
 
@@ -196,17 +194,13 @@ The above lines are formated using ~C-u M-x align-regexp RET \(\s-+\)\w\{2,\}\(?
 
 - n :: repeat throughout line: y or n.
 
-* org-babel support for Golang
-Use =ob-go.el= from [[https://github.com/pope/ob-go][ob-go]]
-#+BEGIN_SRC sh
-  mv ob-go-master.zip ~/.emacs.d
-  7z x ob-go-master.zip
-#+END_SRC
-In your =~/.emacs.d/init.el=, add the following lines:
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'load-path "~/.emacs.d/ob-go-master")
-  (require 'ob-go)
-#+END_SRC
+* Golang
+
+** org-babel support for Golang
+Use [[https://github.com/pope/ob-go][ob-go]], which can be installed by el-get: =M-x el-get-install↲ ob-go↲=
+
+** go-mode for emacs
+=M-x el-get-install↲ go-mode↲=
 
 * Footnotes
 
@@ -217,6 +211,12 @@ In your =~/.emacs.d/init.el=, add the following lines:
 [fn:org_language] [[http://orgmode.org/org.html#Languages][Languages support in Babel]]
 
 [fn:magit_update] According to [[https://magit.vc/manual/magit/Updating-from-an-older-release.html#Updating-from-an-older-release][Updating Magit from an older release]], maybe you should first uninstall Magit and some of its dependencies and restart Emacs before installing the latest release. As of [2016-08-29 Mon 21:59], update magit from 1.2.0 to 2.8.0 requires uninstallation first.
+#+BEGIN_EXAMPLE
+  M-x el-get-remove↲ magit↲
+  M-x el-get-remove↲ git-modes↲
+
+  M-x el-get-install↲ magit↲
+#+END_EXAMPLE
 
 [fn:magit] See [[http://magit.github.io/master/magit.html][Magit User Manual]] for details.
 
