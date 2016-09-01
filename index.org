@@ -3,12 +3,12 @@
 #+SETUPFILE: org-templates/level-0.org
 
 #+NAME: getKernelVer
-#+BEGIN_SRC emacs-lisp exports:none
-  (shell-command-to-string "uname -rm")
+#+BEGIN_SRC emacs-lisp :exports none
+  (replace-regexp-in-string "_" "-" (shell-command-to-string "uname -rm"))
 #+END_SRC
 
 #+NAME: getGitVer
-#+BEGIN_SRC emacs-lisp exports:none
+#+BEGIN_SRC emacs-lisp :exports none
   (shell-command-to-string "git version")
 #+END_SRC
 
@@ -17,15 +17,15 @@
 |---+-----------------+----------------------------------------|
 | / |                 | <                                      |
 |---+-----------------+----------------------------------------|
-|   | kernel          | 4.7.2-gentoo x86_64                    |
+|   | kernel          | 4.7.2-gentoo x86-64                    |
 |---+-----------------+----------------------------------------|
 |   | emacs           | GNU Emacs 25.1.1 (x86_64-pc-linux-gnu) |
 |---+-----------------+----------------------------------------|
 |   | emacs: el-get   | el-get version 5.1.a6638a6             |
 |---+-----------------+----------------------------------------|
-|   | emacs: org-mode | release-8.3.5-1103-gc72a0d             |
+|   | emacs: org-mode | release-8.3.5-1107-gf68553             |
 |---+-----------------+----------------------------------------|
-|   | emacs: magit    | 2.8.0-5-gec81268                       |
+|   | emacs: magit    | 2.8.0-6-g8fe8784                       |
 |---+-----------------+----------------------------------------|
 |   | git             | git version 2.9.3                      |
 #+TBLFM: @3$3='(org-sbe getKernelVer)::@4$3='(let ((ver-str (emacs-version))) (progn (string-match "\\(.*\\)" ver-str) (match-string 1 ver-str)))::@5$3='(el-get-version)::@6$3='(let* ((long-ver (org-version nil "FULL")) (short-ver (progn (string-match "(\\(.*\\) @" long-ver) (match-string 1 long-ver)))) (replace-regexp-in-string "_" "-" short-ver))::@7$3='(magit-version)::@8$3='(org-sbe getGitVer)
