@@ -40,6 +40,9 @@ precise,  the  value  is  the   underlying  concrete  data  item  that
 implements the interface and the type  describes the full type of that
 item."[fn:5]
 
+* Appendix
++'§' can be input using ~C-x 8↲ a7↲~
+
 * Footnotes
 
 [fn:6] Alan  A.A.Donovan  &  Brian W.Kernighan  "The  Go  Programming
