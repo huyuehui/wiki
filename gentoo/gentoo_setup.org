@@ -261,7 +261,9 @@ To install ~oracle-jdk-bin~:
 
 *** Visual Studio Code
 Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo/tree/master/app-editors/visual-studio-code][jorgicio: visual-studio-code 1.4.0]].
-See [[*External Overlay][External Overlay]]
+See [[*External Overlay][External Overlay]].
+
+Various programming language support: [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
 
 *** FFmpeg vs. Libav
 
