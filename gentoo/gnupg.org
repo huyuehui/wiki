@@ -1,0 +1,329 @@
+#+TITLE: GnuPG Tools
+#+DATE: [2016-09-05 Mon 19:04]
+#+KEYWORDS: gnupg
+#+SETUPFILE: ../org-templates/level-1.org
+
+* Installation
+~emerge --ask app-crypt/gnupg~
+
+* Usage
+#+BEGIN_SRC sh
+  # Create a key, follow on-screen instructions.
+  gpg --gen-key↲
+
+  # Check key infomation.
+  gpg --list-keys↲
+  --------------------------------
+  pub   rsa2048 2014-07-01 [SC]
+	xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  uid           [ultimate] xxxxxxx <xxxxx@xxxxxx.xxx>
+  sub   rsa2048 2014-07-01 [E]
+
+  # Create a revocation certificate, follow on-screen instructions.
+  gpg --output revoke.asc --gen-revoke xxxxxx # <--- from above
+#+END_SRC
+
+** Using a GPG ageent
+See [[https://www.gnupg.org/documentation/manuals/gnupg/Invoking-GPG_002dAGENT.html#Invoking-GPG_002dAGENT][GnuPG Manuals]] for more details.
+The agent is automatically started on demand by gpg.
+#+BEGIN_SRC sh
+  ## Choose UI frontend of pinentry
+  root#eselect pinentry list↲
+    [1]   pinentry-curses *
+    [2]   pinentry-tty
+
+  FILE: ~/.bashrc
+
+  ## Otherwise it will complaint:
+  ##      pinentry-curses: no LC_CTYPE known
+  export GPG_TTY=$(tty)
+
+  FILE: ~/.gnupg/gpg-agent.conf
+
+  ## Tell Pinentry  to allow features to  divert the passphrase entry  to a
+  ## running Emacs  instance.  How this  is exactly handled depends  on the
+  ## version of the used Pinentry.
+  all-emacs-pinentry
+#+END_SRC
+
+Begin from GnuPG 2.1, GPG_AGENT_INFO is ignored.
+#+BEGIN_QUOTE
+gnupg-2.1.5/NEWS:
+
+ [Noteworthy changes in version 2.1.0-beta864 (2014-10-03)]
+
+ * gpg: Removed the GPG_AGENT_INFO related code.  GnuPG does now
+   always use a fixed socket name in its home directory.
+#+END_QUOTE
+
+** GPG-sign git commit
+#+BEGIN_SRC sh
+  ## If git-tag(1) or git-commit(1) is not selecting the key you want it to
+  ## automatically when creating  a signed tag or commit,  you can override
+  ## the  default  selection with  this  variable.  This option  is  passed
+  ## unchanged to gpg’s  --local-user parameter, so you may  specify a key
+  ## using any method that gpg supports.
+  gpg --list-secret-keys↲
+  git config user.signingkey "xxxxxxxx"↲
+
+  ## Examples
+  git tag -s v1.0↲
+  git commit -a -S↲
+#+END_SRC
+
+* Emacs Integration
+
+Various components are involved:
+#+BEGIN_SRC emacs-lisp
+  ;;;; FILE: /usr/share/emacs/25.1/lisp/net/pinentry.el
+
+  ;;; Commentary:
+
+  ;; This package allows GnuPG passphrase to be prompted through the
+  ;; minibuffer instead of graphical dialog.
+  ;;
+  ;; To use, add "allow-emacs-pinentry" to "~/.gnupg/gpg-agent.conf",
+  ;; reload the configuration with "gpgconf --reload gpg-agent", and
+  ;; start the server with M-x pinentry-start.
+  ;;
+  ;; The actual communication path between the relevant components is
+  ;; as follows:
+  ;;
+  ;;   gpg --> gpg-agent --> pinentry --> Emacs
+  ;;
+  ;; where pinentry and Emacs communicate through a Unix domain socket
+  ;; created at:
+  ;;
+  ;;   ${TMPDIR-/tmp}/emacs$(id -u)/pinentry
+  ;;
+  ;; under the same directory which server.el uses.  The protocol is a
+  ;; subset of the Pinentry Assuan protocol described in (info
+  ;; "(pinentry) Protocol").
+  ;;
+  ;; NOTE: As of August 2015, this feature requires newer versions of
+  ;; GnuPG (2.1.5+) and Pinentry (0.9.5+).
+#+END_SRC
+
+#+HEADER: :file ~/work/wiki/public_html/images/gnupg_emacs.png
+#+BEGIN_SRC dot :results silent :exports none
+  digraph gnupg {
+    compound=true;
+    node [shape=record];
+    gpg [label="gpg"];
+    gpg_agent [label="gpg-agent"];
+    subgraph cluster_pinentry{
+      label="pinentry";
+      labeljust="l";
+      option_handler [label="option_handler(...)"];
+      enable_emacs_handler [label="pinentry_enable_emacs_cmd_handler()"];
+      initial_emacs_handler [label="initial_emacs_cmd_handler(...)"];
+      emacs_init [label="pinentry_emacs_init()&#92;nset_socket(...)"];
+    }
+    subgraph cluster_emacs{
+      label="emacs";
+      labeljust="r";
+      pinentry [label="M-x pinentry_start()"];
+      emacs_lib [label="make-network-process(...)"];
+    }
+    server [label="unix domain socket&#92;n/tmp/emacs1000/pinentry", shape=oval];
+
+    gpg -> gpg_agent [label=" start on demand"];
+    gpg_agent -> option_handler [label=" allow-emacs-pinentry", lhead=cluster_pinentry];
+    {rank=same gpg gpg_agent};
+    option_handler -> enable_emacs_handler [label=" INSIDE_EMACS=t"];
+    enable_emacs_handler -> initial_emacs_handler;
+    initial_emacs_handler -> emacs_init;
+    pinentry -> emacs_lib;
+    emacs_init -> server [ltail=cluster_pinentry, dir="both"];
+    emacs_lib -> server [ltail=cluster_emacs, dir="both"];
+  }
+#+END_SRC
+The process can be depicted as the following:[fn:1]
+
+#+CAPTION: Communication path between GnuPG and Emacs
+[[file:~/work/wiki/public_html/images/gnupg_emacs.png]]
+
+gpg-agent --> pinentry
+#+BEGIN_SRC C
+  ##File: gnupg-2.1.15/agent/call-pinentry.c
+
+  static gpg_error_t
+  start_pinentry (ctrl_t ctrl)
+  {
+    ...
+
+    if (opt.allow_emacs_pinentry)
+      {
+	/* Indicate to the pinentry that it may read passphrase through
+	   Emacs minibuffer, if possible.  */
+	rc = assuan_transact (entry_ctx, "OPTION allow-emacs-prompt",
+                              NULL, NULL, NULL, NULL, NULL, NULL);
+	if (rc && gpg_err_code (rc) != GPG_ERR_UNKNOWN_OPTION)
+          return unlock_pinentry (rc);
+      }
+
+    ...
+  }
+#+END_SRC
+
+pinentry <--> emacs
+#+BEGIN_SRC C
+  ##FILE: pinentry-0.9.7/pinentry/pinentry-emacs.c
+
+  /* The communication mechanism is similar to emacsclient, but there
+     are a few differences:
+
+     - To avoid unnecessary character escaping and encoding conversion,
+       we use a subset of the Pinentry Assuan protocol, instead of the
+       emacsclient protocol.
+
+     - We only use a Unix domain socket, while emacsclient has an
+       ability to use a TCP socket.  The socket file is located at
+       ${TMPDIR-/tmp}/emacs$(id -u)/pinentry (i.e., under the same
+       directory as the socket file used by emacsclient, so the same
+       permission and file owner settings apply).
+
+     - The server implementation can be found in pinentry.el, which is
+       available in Emacs 25+ or from ELPA.  */
+  static int
+  initial_emacs_cmd_handler (pinentry_t pe)
+  {
+    /* Let the select() call in pinentry_emacs_init honor the timeout
+       value set through an Assuan option.  */
+    initial_timeout = pe->timeout;
+
+    if (emacs_socket < 0)
+      pinentry_emacs_init ();
+
+    /* If   we    have   successfully    connected   to    Emacs,   swap
+       pinentry_cmd_handler    to    emacs_cmd_handler,    so    further
+       interactions will be forwarded to  Emacs.  Otherwise, set it back
+       to     the     original      command     handler     saved     as
+       fallback_cmd_handler.  */
+    if (emacs_socket < 0)
+      pinentry_cmd_handler = fallback_cmd_handler;
+    else
+      pinentry_cmd_handler = emacs_cmd_handler;
+
+    return (* pinentry_cmd_handler) (pe);
+  }
+
+  static int
+  set_socket (const char *socket_name)
+  {
+    struct sockaddr_un unaddr;
+    struct stat statbuf;
+    const char *tmpdir;
+    ...
+    uid_t uid;
+
+    unaddr.sun_family = AF_UNIX;
+
+    /* We assume 32-bit UIDs, which can be represented with 10 decimal
+       digits.  */
+    uid = getuid ();
+    ...
+
+    tmpdir = getenv ("TMPDIR");
+    if (!tmpdir)
+      {
+          ...
+	  tmpdir = "/tmp";
+      }
+    emacs_socket = socket (AF_UNIX, SOCK_STREAM, 0);
+    if (emacs_socket < 0)
+      {
+	perror ("socket");
+	return 0;
+      }
+
+    if (connect (emacs_socket, (struct sockaddr *) &unaddr,
+		 SUN_LEN (&unaddr)) < 0)
+      {
+	perror ("connect");
+	close (emacs_socket);
+	emacs_socket = -1;
+	return 0;
+      }
+
+    return 1;
+  }
+
+  int
+  pinentry_emacs_init (void)
+  {
+    char buffer[256];
+    gpg_error_t error;
+
+    assert (emacs_socket < 0);
+
+    /* Check if we can connect to the Emacs server socket.  */
+    if (!set_socket ("pinentry"))
+      return 0;
+
+    /* Check if the server responds.  */
+    error = read_from_emacs (emacs_socket, initial_timeout,
+			     buffer, sizeof (buffer));
+    if (error != 0)
+      {
+	close (emacs_socket);
+	emacs_socket = -1;
+	return 0;
+      }
+    return 1;
+  }
+#+END_SRC
+
+envvar ~INSIDE_EMACS~ should be set for pinentry to interact with Emacs.
+#+BEGIN_SRC C
+  ##FILE: pinentry-0.9.7/pinentry/pinentry-emacs.c
+
+  /* pinentry-emacs.h
+     Enable pinentry command handler which interacts with Emacs, if
+     INSIDE_EMACS envvar is set.  This function shall be called upon
+     receiving an Assuan request "OPTION allow-emacs-prompt".  */
+  void
+  pinentry_enable_emacs_cmd_handler (void)
+  {
+    const char *envvar;
+
+    /* Check if pinentry_cmd_handler is already prepared for Emacs.  */
+    if (pinentry_cmd_handler == initial_emacs_cmd_handler
+	|| pinentry_cmd_handler == emacs_cmd_handler)
+      return;
+
+    /* Check if INSIDE_EMACS envvar is set.  */
+    envvar = getenv ("INSIDE_EMACS");
+    if (!envvar || !*envvar)
+      return;
+
+    /* Save the original command handler as fallback_cmd_handler, and
+       swap pinentry_cmd_handler to initial_emacs_cmd_handler.  */
+    fallback_cmd_handler = pinentry_cmd_handler;
+    pinentry_cmd_handler = initial_emacs_cmd_handler;
+  }
+
+  ##FILE: pinentry-0.9.7/pinentry/pinentry.c
+
+  static gpg_error_t
+  option_handler (assuan_context_t ctx, const char *key, const char *value)
+  {
+    ...
+
+    else if (!strcmp (key, "allow-emacs-prompt") && !*value)
+      {
+  #ifdef INSIDE_EMACS
+	pinentry_enable_emacs_cmd_handler ();
+  #else
+	return gpg_error (GPG_ERR_NOT_SUPPORTED);
+  #endif
+      }
+
+    ...
+  }
+#+END_SRC
+
+* Footnotes
+
+[fn:1] Auto-evaluated doesn't happen when exporting, use ~C-c C-c~ manually.
+

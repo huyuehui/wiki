@@ -4,6 +4,7 @@
      + [[file:emacs/emacs_orgmode_setup.org][Setup org-mode & magit for Emacs]]
    + gentoo
      + [[file:gentoo/gentoo_setup.org][Gentoo Linux Setup Guide]]
+     + [[file:gentoo/gnupg.org][GnuPG Tools]]
      + [[file:gentoo/gentoo_installation.org][UEFI Windows 8.1 & Gentoo Installation Guide]]
    + golang
      + [[file:golang/golang_refspec_notes.org][Notes on Go's Language Specification]]
