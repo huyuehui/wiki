@@ -121,24 +121,21 @@ Various components are involved:
     }
     subgraph cluster_emacs{
       label="emacs";
-      labeljust="r";
+      labeljust="l";
+      start [label="User", shape=circle];
       pinentry [label="M-x pinentry_start()"];
       emacs_lib [label="make-network-process(...)"];
+      magit [label="M-x magit-status"];
+      magit_commit [label="magit-commit"];
     }
     server [label="unix domain socket&#92;n/tmp/emacs1000/pinentry", shape=oval];
-    subgraph cluster_magit{
-      label="magit";
-      labeljust="l";
-      magit [label="M-x magit-status"];
-      magit_commit [label="(magit) c =S c"];
-    }
-    pinentry -> magit [ltail=cluster_emacs];
+    start -> pinentry;
+    start -> magit;
     magit_commit -> gpg;
     magit -> magit_commit;
 
     gpg -> gpg_agent [label=" start on demand"];
     gpg_agent -> option_handler [label=" allow-emacs-prompt"];
-    {rank=same gpg gpg_agent};
     option_handler -> enable_emacs_handler [label=" INSIDE_EMACS=t"];
     enable_emacs_handler -> initial_emacs_handler;
     initial_emacs_handler -> emacs_init;
