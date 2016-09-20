@@ -23,7 +23,7 @@
   gpg --output revoke.asc --gen-revoke xxxxxx # <--- from above
 #+END_SRC
 
-** Using a GPG ageent
+** Using a GPG agent
 See [[https://www.gnupg.org/documentation/manuals/gnupg/Invoking-GPG_002dAGENT.html#Invoking-GPG_002dAGENT][GnuPG Manuals]] for more details.
 The agent is automatically started on demand by gpg.
 #+BEGIN_SRC sh
@@ -46,7 +46,7 @@ The agent is automatically started on demand by gpg.
   all-emacs-pinentry
 #+END_SRC
 
-Begin from GnuPG 2.1, GPG_AGENT_INFO is ignored.
+Begin from GnuPG 2.1, ~GPG_AGENT_INFO~ is ignored.
 #+BEGIN_QUOTE
 gnupg-2.1.5/NEWS:
 
