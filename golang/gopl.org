@@ -29,7 +29,20 @@ is 64-bit, it equals to ~32 << 1 = 64~
 ~var w io.Writer~
 In Go, variables  are always initialized to a  well-defined value, and
 interfaces are no exception. The zero  value for an interface has both
-its type and value components set to nil.(Figure 7.1)
+its type and value components set to nil.
+#+HEADER: :file ~/work/wiki/public_html/images/gopl_interface.png
+#+BEGIN_SRC dot :results silent :exports none
+  digraph interface {
+	  var [shape=none, margin=0, label=<
+	  <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+	    <TR><TD></TD><TD align="LEFT">w</TD></TR>
+	    <TR><TD align="RIGHT" valign="MIDDLE" cellpadding="2">type</TD><TD border="1" cellpadding="10" width="60">nil</TD></TR>
+	    <TR><TD align="RIGHT" valign="MIDDLE" cellpadding="2">value</TD><TD border="1" cellpadding="10" width="60">nil</TD></TR>
+	  </TABLE>>];
+  }
+#+END_SRC
+#+CAPTION: Figure 7.1. A nil interface value.
+[[file:~/work/wiki/public_html/images/gopl_interface.png]]
 
 An  interface value  is  described  as nil  or  non-nil  based on  its
 *dynamic* type, so this is a nil interface value.[fn:6]
