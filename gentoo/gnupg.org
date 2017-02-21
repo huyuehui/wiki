@@ -47,14 +47,14 @@ The agent is automatically started on demand by gpg.
 #+END_SRC
 
 Begin from GnuPG 2.1, ~GPG_AGENT_INFO~ is ignored.
-#+BEGIN_QUOTE
+#+BEGIN_EXAMPLE
 gnupg-2.1.5/NEWS:
 
  [Noteworthy changes in version 2.1.0-beta864 (2014-10-03)]
 
  * gpg: Removed the GPG_AGENT_INFO related code.  GnuPG does now
    always use a fixed socket name in its home directory.
-#+END_QUOTE
+#+END_EXAMPLE
 
 ** GPG-sign git commit
 #+BEGIN_SRC sh
