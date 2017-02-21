@@ -329,7 +329,19 @@ envvar ~INSIDE_EMACS~ should be set for pinentry to interact with Emacs.
   }
 #+END_SRC
 
+Start from ~v2.9.0~, Magit sets ~INSIDE_EMACS~ internally[fn:2]. To use
+pinentry in Emacs's minibuffer:
+#+BEGIN_EXAMPLE
+  # First, start Emacs's internal pinentry server
+  M-x pinentry-start↲
+
+  # Second, show Magit's panel
+  M-x magit-status↲
+#+END_EXAMPLE
+
 * Footnotes
 
 [fn:1] Auto-evaluated doesn't happen when exporting, use ~C-c C-c~ manually.
+
+[fn:2] [[https://github.com/magit/magit/issues/2776][magit::issue::GPG signing functionality breaks on OS X]]
 
