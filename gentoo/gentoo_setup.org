@@ -1,6 +1,7 @@
 #+TITLE: Gentoo Linux Setup Guide
 #+DATE: [2014-07-07 Mon 16:32]
 #+KEYWORDS: gentoo
+#+OPTIONS: H:5
 #+SETUPFILE: ../org-templates/level-1.org
 
 * User Administration
@@ -85,7 +86,7 @@ google-chrome requires explicit license acknowledgement:
 *** package.use
 
 Custom USE flags for individual package. For USE flags defined in
-Gentoo's profile ~desktop~ but *missing* in ~no-multilib~, don't
+Gentoo's profile ~desktop~[fn:2] but *missing* in ~no-multilib~, don't
 forget to add them manually.
 #+BEGIN_EXAMPLE
   cat /etc/portage/package.use↲
@@ -133,6 +134,9 @@ forget to add them manually.
 
   # required by x11-base/xorg-drivers-1.19::gentoo[video_cards_i965]
   >=x11-base/xorg-server-1.19.1 glamor
+
+  # To run fstrim periodically
+  sys-process/cronie anacro
 
   ## Defined in Gentoo's desktop profile, missing in no-multilib.
   # required by x11-misc/xdg-utils-1.1.1-r1:0/0::gentoo
@@ -243,7 +247,143 @@ NOTE: See [[https://wiki.gentoo.org/wiki/Kernel/Configuration][Gentoo::Wiki::Ker
 
 * Installing software
 
-** Necessary System Tools
+** System Software
+
+*** gentoolkit
+#+BEGIN_EXAMPLE
+  # For portage tools： equery, eclean, etc
+  emerge --ask gentoolkit↲
+#+END_EXAMPLE
+
+*** NTFS
+#+BEGIN_EXAMPLE
+  # NTFS support
+  emerge --ask ntfs3g↲
+#+END_EXAMPLE
+
+*** cronie & anacron
+    :PROPERTIES:
+    :CUSTOM_ID: Cronie
+    :END:
+See [[https://wiki.gentoo.org/wiki/Cron][Gentoo::Wiki::Cron]] for reference.
+~sys-process/cronie~ has built-in ~anacron~ support which is disabled
+by default. *ENABLE* it to run ~fstrim~ periodically.
+#+BEGIN_EXAMPLE
+  # package.use
+  sys-process/cronie anacron
+
+  emerge -aN sys-process/cronie↲
+
+  # Make sure the cron daemon of choice has been added to the system's
+  # init process. This is NOT added by default with Cronie package.
+  rc-update add cronie default↲
+
+  # Create /etc/cron.daily/fstrim：
+  ---------------------------------------------------------------------
+  #!/bin/sh
+
+  /sbin/fstrim /
+  EXITVALUE=$?
+  if [ $EXITVALUE != 0 ]; then
+      /usr/bin/logger -t logrotate "ALERT fstrim exited abnormally with [$EXITVALUE]"
+  fi
+  exit 0
+  ---------------------------------------------------------------------
+  # Ensure the fstrim script has the right permission(755).
+#+END_EXAMPLE
+[2017-03-21 Tue 22:11] ~/~ takes 24% disk space. For 0-30% capacity
+usage, maybe a weekly fstrim is reasonable[fn:4].
+
+*** X Window System
+
+**** X Server
+Additional USE flags:
+#+BEGIN_EXAMPLE
+  # Required in Gentoo's desktop profile
+
+  # Jeremy Olexa <darkside@gentoo.org> (07 Oct 2011)
+  # Required by mesa, ultimately by xorg-server (every desktop) bug 385843
+  dev-libs/libxml2 python
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+  emerge --ask xorg-server↲
+#+END_EXAMPLE
+
+**** X Window Manager
+#+BEGIN_EXAMPLE
+  # In /etc/portage/make.conf, add:
+  USE="X -gnome -kde"
+
+  # package.use, add:
+  x11-wm/fvwm png truetype vannilla
+
+  # Install fvwm
+  emerge --ask fvwm
+
+  # Create ~/.xinitrc, add:
+  exec fvwm
+
+  # Config FVWM, run it for ONCE:
+  startx↲
+
+  # Exit X, find ~/.fvwm/.fvwm2rc:
+  cd ~/.fvwm↲
+  ## Recommanded in FVWM's Manual
+  mv .fvwm2rc config↲
+#+END_EXAMPLE
+See [[https://github.com/huyuehui/config/tree/master/fvwm][My FVWM's Configuration]] for details.
+
+**** X Terminal
+#+BEGIN_EXAMPLE
+  # package.use, add:
+  x11-terms/rxvt-unicode 256-color xft alt-font-width -vanilla perl
+
+  # Install
+  emerge --ask rxvt-unicode↲
+
+  # X Terminal's font
+  # Create ~/.Xdefaults, add:
+  URxvt.font: xft:Dejavu Sans Mono,\
+	      xft:wenquanyi bitmap song
+#+END_EXAMPLE
+
+**** Language
+The *OLD* way:
+#+BEGIN_EXAMPLE
+  # /etc/portage/make.conf
+  LINGUAS="en"
+#+END_EXAMPLE
+The *NEW* way:
+
+[2016-06-19 Sun], ~L10N USE_EXPAND variable replacing LINGUAS~:[fn:3]
+#+BEGIN_EXAMPLE
+  LINGUAS as a USE_EXPAND'ed variable is being replaced by the L10N
+  variable (see below). This avoids a conceptual clash with the standard
+  gettext behaviour. After a transition time for packages to be
+  converted, LINGUAS will become a regular environment variable.
+
+  eselect news list↲
+   ...
+   [23]     2016-06-19  L10N USE_EXPAND variable replacing LINGUAS
+   ...
+  eselect news read 23↲
+#+END_EXAMPLE
+[2017-03-20 Mon 21:26], there are still some packages, such as
+~iso-codes~, that ain't L10N-compatible. Keep the ~LINGUAS~ set for
+now:
+#+BEGIN_EXAMPLE
+  # /etc/portage/make.conf:
+
+  L10N="en-US"
+
+  # Will be deprecated in the future.
+  LINGUAS="en"
+#+END_EXAMPLE
+A list of L10N values that can be used is provided as
+~/usr/portage/profiles/desc/l10n.desc~. To set it per-package, edit
+~/etc/portage/package.use~ and prefix the requested language packs
+with ~l10n_~[fn:3].
 
 *** Java
 
@@ -325,11 +465,36 @@ Because ~mpv~[fn:1] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 
 #+END_EXAMPLE
 
+*** vim
+#+BEGIN_EXAMPLE
+  # Vim Editor
+  emerge --ask vim↲
+  ## Check
+  eselect vi list↲
+    [1]   vim *
+    [2]   busybox
+#+END_EXAMPLE
+
+*** p7zip
+#+BEGIN_EXAMPLE
+  # Zip/Rar support
+  ## package.use, add:
+  app-arch/p7zip rar
+  ## Install
+  emerge --ask p7zip
+#+END_EXAMPLE
+
 * TODO Update Gigabyte BIOS
 
 每次升级BIOS后，需要重新使用efibootmgr修改UEFI Boot Menu。详见上一篇文档。
 
 * Footnotes
+
+[fn:4] [[http://chmatse.github.io/SSDcronTRIM/][SSDcronTRIM]]
+
+[fn:3] [[https://wiki.gentoo.org/wiki/Localization/Guide#L10N][Gentoo::Wiki::Localization/Guide]]
+
+[fn:2] ~/usr/portage/profiles/targets/desktop/package.use~
 
 [fn:1] [[https://github.com/mpv-player/mpv#ffmpeg-vs-libav][FFmpeg vs. Libav]]
 

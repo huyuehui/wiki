@@ -565,7 +565,40 @@ And take [[http://wiki.gentoo.org/wiki/SSD#Mounting][Gentoo::Wiki::SSD::Mounting
   # /dev/sdb2, LABEL=DATA1
   PARTUUID=080cd663-fb32-4cdd-b9d2-42f5ed5a5f45   /mnt    ntfs    defaults,noatime,uid=lucifer,gid=users  0       2
 #+END_EXAMPLE
-NOTE: Before you mount a ntfs partition, you need ~emerge --ask ntfs3g↲~.
+NOTE: Before you mount a ntfs partition, you need ~emerge --ask ntfs-3g↲~.
+
+According to [[https://bugs.launchpad.net/ubuntu/+source/fstrim/+bug/1449005][Samsung 840 EVO TRIM issue]], Samsung 840 EVO SSD's
+firmware advertises that it supports queued TRIM but it doesn't. For
+this feature, 840 EVO has been blacklisted in Linux Kernel, as of
+kernel 4.10.4:
+#+BEGIN_EXAMPLE
+  https://github.com/torvalds/linux/blob/v4.10/drivers/ata/libata-core.c
+
+  /* devices that don't properly handle queued TRIM commands */
+  ...
+  { "Samsung SSD 8*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+						  ATA_HORKAGE_ZERO_AFTER_TRIM, },
+  ...
+#+END_EXAMPLE
+Non-queued TRIM works. However, using ~discard~ mount option might
+have performance impact because of lacking queued TRIM support. See
+[[https://wiki.gentoo.org/wiki/SSD#Mounting][Gentoo::Wiki::SSD#Mounting]] for alternative suggestions. A cron job is
+scheduled to do ~fstrim /~ once a day, as shown in [[file:gentoo_setup.org::#Cronie][cronie & anacron]].
+
+***** XDG cache
+One way to do SSD optimization is to put Chrome's default cache dir
+=~/.cache=, which is on SSD, to tmpfs.
+#+BEGIN_EXAMPLE
+  # Create: /etc/profile.d/xdg_cache_home.sh
+
+  #!/bin/bash
+
+  export XDG_CACHE_HOME="/tmp/${USER}/.cache"
+
+  # Then RESTART X to put it into effect.
+#+END_EXAMPLE
+WARNING: With above change, auto unlocking the gnome keyring didn't
+work anymore[fn:1]. Temporarily use it for now.
 
 **** Networking Information
 
@@ -709,4 +742,5 @@ Note that as of parted-2.4, when you specify start and/or end values using IEC b
 
 [fn:reFInd] [[http://www.rodsbooks.com/refind/][reFInd]] seems a powerful EFI boot manager.
 
+[fn:1] [[https://wiki.gentoo.org/wiki/SSD#XDG_cache][Gentoo::Wiki::SSD#XDG cache]]
 
