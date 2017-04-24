@@ -86,7 +86,7 @@ google-chrome requires explicit license acknowledgement:
 *** package.use
 
 Custom USE flags for individual package. For USE flags defined in
-Gentoo's profile ~desktop~[fn:2] but *missing* in ~no-multilib~, don't
+Gentoo's profile ~desktop~[fn:1] but *missing* in ~no-multilib~, don't
 forget to add them manually.
 #+BEGIN_EXAMPLE
   cat /etc/portage/package.use↲
@@ -292,10 +292,160 @@ by default. *ENABLE* it to run ~fstrim~ periodically.
   # Ensure the fstrim script has the right permission(755).
 #+END_EXAMPLE
 [2017-03-21 Tue 22:11] ~/~ takes 24% disk space. For 0-30% capacity
-usage, maybe a weekly fstrim is reasonable[fn:4].
+usage, maybe a weekly fstrim is reasonable[fn:2].
 
 *** X Window System
+**** TODO Video[fn:3]
+***** Kernel
+#+BEGIN_EXAMPLE
+  # kernel .config:
+  Device Drivers  --->
+       Graphics support  --->
+           <*> /dev/agpgart (AGP Support)  --->
+               --- /dev/agpgart (AGP Support)
+               < >   AMD Opteron/Athlon64 on-CPU GART support
+               -*-   Intel 440LX/BX/GX, I8xx and E7x05 chipset support
+               < >   SiS chipset support
+               < >   VIA chipset support
+	   ...
+	   <*> Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)  --->
+               --- Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)
+               [*]   Enable legacy fbdev support for your modesetting driver
+	   ...
+	   <*> Intel 8xx/9xx/G3x/G4x/HD Graphics
+#+END_EXAMPLE
+***** Drivers
+Haswell 4670K's HD4600 belongs to ~i965~.
+#+BEGIN_EXAMPLE
+  # make.conf:
+  VIDEO_CARDS="intel i965"
 
+  emerge --ask --changed-use --deep @world↲
+#+END_EXAMPLE
+Here ~VIDEO_CARDS~ is a ~USE_EXPAND~ flag, which is documented in the
+~profiles/desc/~ directory with one file per flag[fn:4].
+
+The ~intel~ value is for ~x11-base/xorg-drivers~, which is the meta
+package containing deps on all xorg drivers.  The ~i965~ value are for
+~media-libs/mesa~.
+
+Prior to ~xorg-drivers 1.19~, ~VIDEO_CARDS="intel i965"~ is the same
+as ~VIDEO_CARDS="intel"~. ~i965~ is added in [[https://github.com/gentoo/gentoo/commit/0f26449868d8412b9629ee3b7cd4ba18427b5b36][COMMIT 0f26449]] and came
+into effect from [[https://github.com/gentoo/gentoo/commit/88e99c24dc6887dce2fda053209b17d0c004aedf][COMMIT 88e99c2]].
+#+BEGIN_EXAMPLE
+  # xorg-drivers-1.18-r1.ebuild
+  PDEPEND="
+	  ...
+	  video_cards_intel?         ( x11-drivers/xf86-video-intel )
+	  ...
+  "
+
+  # xorg-drivers-1.19.ebuild
+  PDEPEND="
+	  ...
+	  video_cards_i915?          ( x11-drivers/xf86-video-intel )
+	  video_cards_i965?          ( >=x11-base/xorg-server-${PV}[glamor] )
+	  video_cards_intel?         ( !video_cards_i965? ( x11-drivers/xf86-video-intel ) )
+	  ...
+  "
+#+END_EXAMPLE
+See [[https://devmanual.gentoo.org/eclass-reference/ebuild/index.html][Ebuild Reference]] for details about ebuild file.
+
+***** Intel DDX & Modesetting DDX
+#+BEGIN_EXAMPLE
+  Beginning with x11-base/xorg-drivers-1.19, the x11-base/xorg-drivers package (in addition to the mesa package) includes support the i965 USE flag. This will omit selection of the deprecating x11-drivers/xf86-video-intel driver in favor of the more maintained, generic modesetting DDX driver built-in to x11-base/xorg-server.
+#+END_EXAMPLE
+For staying with Intel DDX:
+#+BEGIN_EXAMPLE
+  # make.conf:
+  VIDEO_CARDS="intel"
+
+  emerge -aDN @world↲
+#+END_EXAMPLE
+For switching over to Modesetting DDX:
+#+BEGIN_EXAMPLE
+  # make.conf:
+  VIDEO_CARDS="intel i965"
+
+  # package.use, add:
+
+  # required by x11-base/xorg-drivers-1.19::gentoo[video_cards_i965]
+  >=x11-base/xorg-server-1.19.1 glamor
+
+  emerge --ask --change-use --deep @world↲
+#+END_EXAMPLE
+The intel DDX driver ~xf86-video-intel~ can be safely unmerged.
+
+As of [2017-04-19 Wed 09:40], for safe transaction purpose, I keep
+both of the DDX drivers. The config is the same as with modesetting
+DDX, except that ~xf86-video-intel~ remains installed. We can select
+one of them as shown below.
+
+To force Xorg server to use the Intel DDX driver with SNA for hardware
+accelleration:
+#+BEGIN_EXAMPLE
+  FILE: /etc/X11/xorg.conf.d/20-intel.conf
+
+  # Force Intel DDX
+  Section "Device"
+      Identifier  "Intel Graphics"
+      Driver      "intel"
+      Option      "AccelMethod"    "sna"
+  EndSection
+#+END_EXAMPLE
+
+To force the modesetting driver:
+#+BEGIN_EXAMPLE
+  FILE: /etc/portage/make.conf
+
+  #Enable glamor globally
+  USE="glamor"
+  VIDEO_CARDS="intel i965"
+
+  emerge --ask --change-use --deep @world↲
+
+  FILE: /etc/X11/xorg.conf.d/20-modesetting.conf
+
+  #Force modesetting DDX
+  Section "Device"
+      Identifier  "Intel Graphics"
+      Driver      "modesetting"
+      Option      "AccelMethod"    "glamor"
+      Option      "DRI"            "3"
+  EndSection
+#+END_EXAMPLE
+NOTE: Since ~dri3~ is enabled by default[fn:5]. The ~Option "DRI" "3"~
+line might NOT be necessary? You can verify if ~dri3~ is enabled or
+not via the following command:
+#+BEGIN_EXAMPLE
+  LIBGL_DEBUG=verbose mpv ...
+
+  Output:
+  ......
+  libGL: pci id for fd 13: 8086:0412, driver i965
+  libGL: OpenDriver: trying /usr/lib64/dri/tls/i965_dri.so
+  libGL: OpenDriver: trying /usr/lib64/dri/i965_dri.so
+  ......
+  libGL: Using DRI3 for screen 0
+  ......
+#+END_EXAMPLE
+***** TODO Mesa
+#+BEGIN_EXAMPLE
+  # package.use
+  media-libs/mesa-10.2 -vaapi -llvm -gallium
+#+END_EXAMPLE
+***** VAAPI[fn:6]
+#+BEGIN_EXAMPLE
+  # Enable VAAPI globally
+  ## make.conf, add:
+  USE="vaapi"
+
+  # Enabling VAAPI support will pull in the ~x11-libs/libva~ package.
+  ## package.use:
+  x11-libs/libva opengl
+
+  emerge --ask --changed-use --deep @world↲
+#+END_EXAMPLE
 **** X Server
 Additional USE flags:
 #+BEGIN_EXAMPLE
@@ -356,7 +506,7 @@ The *OLD* way:
 #+END_EXAMPLE
 The *NEW* way:
 
-[2016-06-19 Sun], ~L10N USE_EXPAND variable replacing LINGUAS~:[fn:3]
+[2016-06-19 Sun], ~L10N USE_EXPAND variable replacing LINGUAS~:[fn:7]
 #+BEGIN_EXAMPLE
   LINGUAS as a USE_EXPAND'ed variable is being replaced by the L10N
   variable (see below). This avoids a conceptual clash with the standard
@@ -383,8 +533,9 @@ now:
 A list of L10N values that can be used is provided as
 ~/usr/portage/profiles/desc/l10n.desc~. To set it per-package, edit
 ~/etc/portage/package.use~ and prefix the requested language packs
-with ~l10n_~[fn:3].
+with ~l10n_~[fn:7].
 
+**** TODO Font
 *** Java
 
 According to [[http://wiki.gentoo.org/wiki/Java][Gentoo::Wiki::Java]], to install ~icedtea-bin~:
@@ -431,8 +582,52 @@ To install ~oracle-jdk-bin~:
   Follow the instructions, then:
   emerge --ask oracle-jdk-bin↲
 #+END_EXAMPLE
+*** dhcpcd
+#+BEGIN_EXAMPLE
+  # Upgrade from net-misc/dhcpcd-6.11.5 to net-misc/dhcpcd-7.0.0_beta3
 
+  dhcpcd-7 has copied dhcpcd.duid and dhcpcd.secret from
+  /etc to /var/lib/dhcpcd
+  and copied leases in /var/lib/dhcpcd to new files with the dhcpcd-
+  prefix dropped.
+
+  You should remove these files if you don't plan on reverting
+  to an older version:
+	  /etc/dhcpcd.duid
+	  /etc/dhcpcd.secret
+	  /var/lib/dhcpcd/dhcpcd-eno1.lease
+	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease
+	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease6
+#+END_EXAMPLE
 ** Applications
+
+*** vim
+#+BEGIN_EXAMPLE
+  # Vim Editor
+  emerge --ask vim↲
+  ## Check
+  eselect vi list↲
+    [1]   vim *
+    [2]   busybox
+#+END_EXAMPLE
+
+*** emacs
+#+BEGIN_EXAMPLE
+  # package.use
+  app-editors/emacs gif jpeg png svg tiff xft
+
+  emerge -a emacs↲
+#+END_EXAMPLE
+For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]].
+
+*** p7zip
+#+BEGIN_EXAMPLE
+  # Zip/Rar support
+  ## package.use, add:
+  app-arch/p7zip rar
+  ## Install
+  emerge --ask p7zip↲
+#+END_EXAMPLE
 
 *** Visual Studio Code
 Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo/tree/master/app-editors/visual-studio-code][jorgicio: visual-studio-code 1.4.0]].
@@ -442,7 +637,7 @@ Various programming language support: [[https://code.visualstudio.com/docs/langu
 
 *** FFmpeg vs. Libav
 
-Because ~mpv~[fn:1] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, we will switch from Libav to FFmpeg.
+Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, we will switch from Libav to FFmpeg.
 
 #+BEGIN_EXAMPLE
   emerge --unmerge mpv↲
@@ -465,24 +660,31 @@ Because ~mpv~[fn:1] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 
 #+END_EXAMPLE
 
-*** vim
+*** Git
 #+BEGIN_EXAMPLE
-  # Vim Editor
-  emerge --ask vim↲
-  ## Check
-  eselect vi list↲
-    [1]   vim *
-    [2]   busybox
+  # package.use:
+  dev-vcs/git -perl -python
+
+  emerge --ask dev-vcs/git↲
 #+END_EXAMPLE
 
-*** p7zip
+*** MPV
 #+BEGIN_EXAMPLE
-  # Zip/Rar support
-  ## package.use, add:
-  app-arch/p7zip rar
-  ## Install
-  emerge --ask p7zip
+  # package.use:
+
+  media-video/mpv bluray dvd jpeg -xscreensaver -xv
+
+  # Ilya Tumaykin <itumaykin+gentoo@gmail.com> (02 Feb 2017)
+  # Enable luajit for OSC and youtube-dl support by default.
+  # Override default +sdl from desktop profile and disable sdl outputs.
+  # These outputs are for systems without a proper audio/video support.
+  media-video/mpv lua luajit -sdl
+
+  emerge --ask mpv↲
 #+END_EXAMPLE
+mpv also supports the VAAPI acceleration through the command-line
+option ~--hwdec=vaapi~[fn:9].
+
 
 * TODO Update Gigabyte BIOS
 
@@ -490,11 +692,77 @@ Because ~mpv~[fn:1] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 
 * Footnotes
 
-[fn:4] [[http://chmatse.github.io/SSDcronTRIM/][SSDcronTRIM]]
+[fn:1] ~/usr/portage/profiles/targets/desktop/package.use~
 
-[fn:3] [[https://wiki.gentoo.org/wiki/Localization/Guide#L10N][Gentoo::Wiki::Localization/Guide]]
+[fn:2] [[http://chmatse.github.io/SSDcronTRIM/][SSDcronTRIM]]
 
-[fn:2] ~/usr/portage/profiles/targets/desktop/package.use~
+[fn:3] [[https://wiki.gentoo.org/wiki/Intel][Gentoo::Wiki::Intel]]
 
-[fn:1] [[https://github.com/mpv-player/mpv#ffmpeg-vs-libav][FFmpeg vs. Libav]]
+[fn:4] [[https://devmanual.gentoo.org/general-concepts/use-flags/index.html][Gentoo::DEV Manual::USE Flags]]
+
+[fn:5] 
+See [[https://cgit.freedesktop.org/xorg/xserver/tree/configure.ac]["configure.ac" in Xorg source files]] for details.
+See [[https://www.gnu.org/software/autoconf/manual/autoconf.html][Autoconf Manual]] for reference.
+#+BEGIN_EXAMPLE
+  FILE: xorg/xserver/configure.ac
+
+  ......
+  AC_ARG_ENABLE(dri2,           AS_HELP_STRING([--enable-dri2], [Build DRI2 extension (default: auto)]), [DRI2=$enableval], [DRI2=auto])
+  AC_ARG_ENABLE(dri3,           AS_HELP_STRING([--enable-dri3], [Build DRI3 extension (default: auto)]), [DRI3=$enableval], [DRI3=auto])
+
+  ......
+
+  case x"$DRI3" in
+	  xyes|xauto)
+		  DRI3=yes
+		  AC_DEFINE(DRI3, 1, [Build DRI3 extension])
+		  DRI3_LIB='$(top_builddir)/dri3/libdri3.la'
+		  SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $DRI3PROTO"
+		  AC_MSG_NOTICE([DRI3 enabled]);
+		  ;;
+  esac
+  ......
+#+END_EXAMPLE
+Modesetting DDX will use ~DRI3~ by default. But for Intel DDX, there
+is a restriction:
+#+BEGIN_EXAMPLE
+  equery uses xf86-video-intel↲
+
+  + + dri   : Enable direct rendering: used for accelerated 3D and some 2D, like DMA
+  - - dri3  : (Restricted to <=x11-drivers/xf86-video-intel-2.99.917_p20160621)
+              Enable DRI3 support
+#+END_EXAMPLE
+See [[https://cgit.freedesktop.org/xorg/driver/xf86-video-intel/commit/?id=9154dff9aedad3271f629edb1ccc9c8d273ca7bc][DRI3 is not supported by mesa/i915]] for details.
+#+BEGIN_EXAMPLE
+  # For modesetting DDX:
+  man xorg.conf↲
+
+  ......
+  Option "DRI2" "boolean"
+	 enable or disable DRI2. DRI2 is disabled by default.
+  ......
+
+  # For intel DDX:
+  man intel↲
+
+  ......
+  Option "DRI" "string"
+	 Disable  or enable DRI support. A driver name to use can be pro‐
+	 vided instead of simple boolean value, which will be  passed  to
+	 the  GL  implementation  for it to load the appropriate backend.
+	 Alternatively the maximum level of DRI to enable (e.g. "1",  "2"
+	 or "3") can be specified.
+
+	 Default:  All levels of DRI are enabled for configurations where
+	 it is supported.
+  ......
+#+END_EXAMPLE
+
+[fn:6] [[https://wiki.gentoo.org/wiki/VAAPI][Gentoo::Wiki::VAAPI]]
+
+[fn:7] [[https://wiki.gentoo.org/wiki/Localization/Guide#L10N][Gentoo::Wiki::Localization/Guide]]
+
+[fn:8] [[https://github.com/mpv-player/mpv#ffmpeg-vs-libav][FFmpeg vs. Libav]]
+
+[fn:9] [[https://wiki.gentoo.org/wiki/VAAPI#mpv][Gentoo::Wiki::VAAPI::mpv]]
 
