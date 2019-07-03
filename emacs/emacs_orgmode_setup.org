@@ -61,10 +61,36 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
 - =M-x el-get-describe= :: Prompt for a package name, with completion, then open an =*Help*= window with details about the selected package. Those include current status, website, description, installation method, full recipe, and buttons to easily install, update or remove the package.
 
+*** Install package from ELPA
+=M-x el-get-elpa-build-local-recipes↲=
+Then packages from ELPA can be browsed in =M-x el-get-list-packages↲=. [[Adding and removing packages][Install the package you want!]]
+
 * org-mode
 ------
 ** Installation
 =M-x el-get-install RET org-mode RET=
+
+** Update
+=M-x el-get-update RET org-mode RET=
+Because of [[https://github.com/dimitri/el-get/commit/32631e33f5ea39bb7aff572a1f2df9d451d54229#diff-8d94ee7843f4ef9f2950f073c9d67c3b][commit 32631e33f5]], el-get can't update org-mode now:
+#+BEGIN_EXAMPLE
+  ## commit 32631e33f5
+  ## ~/.emacs.d/el-get/el-get/recipes/org-mode.rcp
+  From:
+  :url "git://orgmode.org/org-mode.git"
+  To:
+  :url "https://code.orgmode.org/bzg/org-mode.git"
+
+  ## We should manually change the remote url in local repo
+  cd ~/.emacs.d/el-get/org-mode↲
+  git remote set-url origin https://code.orgmode.org/bzg/org-mode.git↲
+  ## Verify the current remote url
+  git remote -v↲
+
+  origin	https://code.orgmode.org/bzg/org-mode.git (fetch)
+  origin	https://code.orgmode.org/bzg/org-mode.git (push)
+#+END_EXAMPLE
+Proxy may speed up this process, see [[file:~/work/wiki/org/gentoo/gentoo_setup.org::*Visual Studio Code][socks5 proxy]] for help.
 
 ** Setup HTML Export Configuration [fn:html_config]
 -----
