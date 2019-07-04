@@ -1,0 +1,892 @@
+#+TITLE: Home Network
+#+DATE: [2017-12-25 Mon 16:43]
+#+KEYWORDS: network
+#+SETUPFILE: ../org-templates/level-1.org
+
+* TODO see vlan_create_ in opmode.sh
+
+* Optical Modem
+  
+** Replace rg200O with sa1456c
+Beijing Unicom offers a rg200O optical modem, which has routing feature enabled and 2.4g wifi supported. To fully customize my home network, I replace rg200O with sa1456c([[https://item.taobao.com/item.htm?spm=a1z09.2.0.0.428b4feU4DkdH&id=534130004778&_u=pb29cccb094][Bought from Taobao]]).
+
+*** rg200o 
+The biggest adventage of rg200o is that it's a all-in-one optical modem. It has 1GbE(LAN1) and 3FE. The internet routing is enabled by default, which isn't what I wanted and I need to bridge the internet connection. The IPTV feature is configured with DHCP(WAN) and Static Routing(LAN). So each one of the four ports offers internet and IPTV connection, respectively, to your device.
+
+*** kd-yun-811e
+After a network failure at [2019-06-28 Fri], Beijing Unicom replaced =rg200o= with =kd-yun-811e=. =sa1456c= should be re-authenticated with the new MAC address. Check =kd-yun-811e= carefully.
+
+**** Login as Admin
+According to [[https://guanggai.org/thread-563-1-1.html][TEWA-800E破解获取超级密码]]:
+#+BEGIN_EXAMPLE
+  Chrome, access http://192.168.1.1 which is the login page of kd-yun-811e
+
+  F12
+  Elements -> CTRL+F user_name :
+  <input name="username" id="user_name" type="text" size="20" value="user">
+  Double click "user_name", change to "CUAdmin"
+
+  Sources -> (index) -> CTRL+F function submitFrm() -> Select & Copy the entire funtion
+
+  Console -> Paste the funtion and edit:
+  ,****************************
+  function submitFrm()
+  {
+	  with(document.forms[0])
+	  {
+		  if ( password.value.length == 0 ) {
+		     alert('密码不得为空!');
+		     return;
+		  }
+		  if(username.value!='CUAdmin') {  <------
+		     alert('请输入正确的用户账户!');
+		     return;
+		  }
+
+	  }
+	  document.getElementById('loginfrm').submit();
+  }
+  ******************************
+  Scroll to the end of submitFrm and HIT "Enter↲" key!
+
+  Login as CUAdmin, password: CUAdmin
+#+END_EXAMPLE
+
+*** sa1456c
+It is an all-in-one optical modem with 4GbE ports.
+Default Settings:
+| Configuration IP | 192.168.100.1 |
+| Super User Name  | t**...**      |
+| Super User Pass  | a**..**       |
+| Wireless Name    | Wireless*...* |
+| Wireless Pass    | *...*         |
+
+**** Authentication
+The seller has pre-configured sa1456c with a *Bridged* internet WAN, a *Routing* IPTV and a *Routing* VOIP. 
+A new sa1456c, which has *NOT* been authenticated to Beijing ChinaUnicom, can be authenticated via web GUI:
+#+BEGIN_EXAMPLE
+  系统工具
+	  -> ONT认证
+	     -> 认证方式 :
+		这里选择以自定义MAC地址向北京联通进行认证
+
+  NOTE：
+
+  据说，北京联通EPON是MAC认证。如果光猫以前没有认证过，才会有使用MAC地址
+  认证的选项。如果以前认证过，认证方式只能选择“逻辑标识认证”和“华为
+  KEY认证”。我买的这只sa1456c由于通电时连着光纤，忘记先修改为rg200O的
+  MAC地址，导致光猫自动以自身MAC地址向联通认证，GUI里以自定义MAC认证的选
+  项消失，只能用手动方式认证，如下所示：
+
+  安全
+	  -> 设备访问控制配置
+	     -> LAN服务
+		-> 使能LAN侧PC通过SSH访问设备 : ✔
+
+  $ssh root@192.168.100.1↲
+  root@192.168.100.1's password:*...*↲
+  WAP>su↲
+  SU_WAP>?  <-- Show available commands
+  SU_WAP>set productmac MAC AA:BB:CC:DD↲
+
+  success!
+  SU_WAP>quit↲
+  WAP>quit↲
+  $
+#+END_EXAMPLE
+
+**** Configuration
+Fundamental settings:
+#+BEGIN_EXAMPLE
+  WAN
+	  -> WAN配置
+	     -> 1_INTERNET_B_VID_3961
+		-> WAN类型 : 桥接WAN
+		-> 使能VLAN : ☑
+		-> VLAN ID : 3961
+		-> 802.1p优先级: 0
+		-> 绑定项 : ☐LAN1 ☐LAN2 ☐LAN3 ☐LAN4
+		IPv4信息
+		-> 组播VLAN : 4000
+
+	     -> 2_VOIP_R_VID_3010
+		-> WAN类型 : 路由WAN
+		-> VLAN ID : 3010
+		-> 802.1p优先级 : 5
+		-> MTU : 1500  <- ①
+		-> 绑定项 ： ☐LAN1 ☐LAN2 ☐LAN3 ☐LAN4
+		-> IP地址获取方式 : Static
+		-> IP地址 : 10.143.2.240
+		-> 子网掩码 : 255.255.254.0
+		-> 默认网关 : 10.143.2.1
+
+	     -> 3_IPTV_R_VID_3964
+		-> WAN类型 : 路由WAN
+		-> VLAN ID : 3964
+		-> 802.1p优先级 : 4
+		-> MTU : 1492
+		-> IP地址获取方式 : DHCP
+		-> 使能NAT : ✔
+		-> 组播VLAN : 4000
+
+  LAN
+	  -> DHCP服务配置
+	     -> 主地址池
+		-> 结束IP地址 : 192.168.100.250 <- ②
+
+  路由
+	  -> VLAN绑定配置
+	     -> 见❸
+
+  语音
+	  -> 语音基本设置 (SIP)
+	     -> 接口基本参数
+		-> Outbound服务器地址 : 10.203.255.1
+		-> Outbound服务器端口号 : 5060
+		-> 备用Outbound服务器地址 : 10.203.255.17
+		-> 备用Outbound服务器端口号 : 5060
+	     -> 用户基本参数 (SIP)
+		-> URI : +8610********
+		-> 鉴权用户名 : +8610********@bj.ims.chinaunicom.cn
+		-> 密码 : *...*  ③
+
+  网络应用
+	  -> 组播配置
+	     -> 使能组播: 使能
+	     -> 组播工作模式: Snooping
+	     ...
+	     -> PPPoE路由WAN Proxy模式: IPoEAndPPPoE
+	     ...
+
+  系统工具
+	  -> 时间设置
+	     -> 自动同步网络时间服务器 : ☑
+	     -> 一级SNTP服务器 : time.nist.gov
+	     -> 二级SNTP服务器 : none
+	     -> 时间区域 : GMT+08:00 Beijing, Chongqing, Hong Kong, Urumqi
+	     -> 时间同步周期 : 86400
+	     -> WAN名称 : 1_INTERNET_R_VID_3961
+
+  NOTE:
+  ① rg200O's backupsettings.conf uses 1492
+  ② excludes 192.168.100.251 ~ 192.168.100.254 for using in subordinate routers.
+  ③ found in backupsettings.conf for r200o
+#+END_EXAMPLE
+❸ VLAN绑定配置：
+| 端口 | 绑定模式 | 绑定VLAN对          |
+| LAN1 | VLAN绑定 | 3961/3961,3964/3964 |
+端口: LAN1
+端口模式: VLAN绑定
+绑定VLAN对: 3961/3961,3964/3964
+出口组播VLAN动作: 不关注
+
+Optimal settings:
+#+BEGIN_EXAMPLE
+  ## Access Limitation
+  安全
+	  -> 设备访问控制配置
+	     -> LAN服务
+		-> 使能LAN侧PC通过TELNET访问设备 : ☐
+	     -> WIFI服务
+		-> 使能WIFI侧设备访问WEB页面 : ☐
+		-> 使能WIFI侧PC通过TELNET访问设备 : ☐
+
+  无线网络
+	  ☐ 开启无线网络
+#+END_EXAMPLE
+
+* Main Router
+** netgear r7800
+First, connected r7800 as a subordinate router of sa1456c, whose internet wan interface works in routing mode.
+Default Settings:
+| Configuration IP | 192.168.1.1 |
+| Super User Name  | root        |
+| Super User Pass  | h*...*      |
+
+The stock firmware is ~1.0.2.28~, which can be automatically upgraded to the newest firmware ~1.0.2.40~ via WEB GUI.
+
+*** Configuration
+#+BEGIN_EXAMPLE
+  # Basic -> Internet
+  Does your Internet connection require a login?
+  ⊙Yes
+
+  Internet Service Provider : PPPoE
+  Login : 9*...*
+  Password : *...*
+  Connection Mode : Always On
+
+  # Wireless
+
+  ## Turn off 2.4G Radio
+  Advanced -> Advanced Setup -> Wireless Settings
+	   -> Advanced Wireless Settings (2.4G b/g/n)
+	      ☐ Enable Wireless Router Radio
+
+  ## Disable SSID Broadcast
+  Basic -> Wireless
+      	   -> Wireless Network (2.4GHz b/g/n)
+      	      ☐ Enable SSID Broadcast
+      	      Name (SSID): S*...*
+
+      	   -> Wireless Network (5GHz 802.11a/n/ac)
+	      ☐ Enable SSID Broadcast
+	      Name (SSID): S*...*_5G
+
+  # VLAN settings
+  Advanced -> Advanced Setup -> VLAN/Bridge Settings
+	   ☑ Enable VLAN/Bridge group
+	     ⊙ By VLAN tag group
+	       ❶
+
+  # BJ Unicom IPTV
+  ## Enable DEBUG mode
+  http://192.168.1.1/debug.htm
+  ☑ Enable Telnet
+
+  ## Setup IGMProxy TODO:FAIL
+  busybox telnet 192.168.1.1↲
+
+  root@R7800:/# ip addr add 192.168.100.251/24 dev eth0.3964↲
+#+END_EXAMPLE
+❶ Port/VLAN mappings:
+|    | Enable | Name     | VLAN ID | Priority | Wired Ports                 | Wireless          |
+| ⊙ | ☑      | Internet |    3961 |        0 | ☑Port1 ☑Port2 ☑Port3 ☐Port4 | ☑WIFI2.4G ☑WIFI5G |
+| ⊙ | ☑      | IPTV     |    3964 |        0 | ☐Port1 ☐Port2 ☐Port3 ☑Port4 | ☐WIFI2.4G ☐WIFI5G |
+See [[Appendix III. R7800 source code]] for details behind the scene.
+
+* Application
+** Transmission
+UPNP or manual port forwarding should be used for Transmission at PC
+to upload correctly[fn:6].
+#+BEGIN_EXAMPLE
+  LEDE
+  Network -> Firewall -> Port Forwards
+	  -> Name : Transmission
+	  -> Protocal : TCP+UDP
+	  -> External Zone : wan
+	  -> External Port : xxxxx ❶
+	  -> Internel Zone : lan
+	  -> Internel IP Address : xxx.xxx.xxx.xxx ('HostName')
+	  'Add' and 'Save & Apply'
+
+  NOTES:
+  ❶ In Transmission WEB interface:
+    -> 'Edit Preferences...'
+       -> Network
+     	  -> Listening Port
+	     Peer listening port : xxxxx
+	     Port is Open <-- If not set correctly, it shows 'Port is Closed'
+	  -> ☐ Randomize port on launch
+	  -> ☑ Use port forwarding from my router
+#+END_EXAMPLE
+
+* Appendix I. Special Symbols
+~ctrl+x 8↲~ "unicode for that symbol"↲
+| Symbol | Unicode |
+| ↲      |    21b2 |
+| ☐      |    2610 |
+| ☑      |    2611 |
+| ①     |    2460 |
+| ❶      |    2776 |
+| ⊙     |    2299 |
+
+* Appendix II. Lede
+** netgear wndr3700v2
+| Configuration IP | 192.168.1.1 |
+| Super User Name  | root        |
+| Super User Pass  | h*...*      |
+
+For testing [[https://lede-project.org/][LEDE-Project's compatibility]], replace r7800 with 3700v2.
+
+*** Configuration
+#+BEGIN_EXAMPLE
+  # Wireless
+
+  ## Turn on 5G Radio, hidden SSID
+  Network -> Wireless -> Atheros AR9220 802.11an (radio1) -> Edit
+	  -> Interface Configuration
+	     -> General Setup
+		-> ESSID : SHIRE-5G
+		-> Hide ESSID : ☑
+	     -> Wireless Security
+		-> Encryption : WPA2-PSK
+		-> Key : h*...*
+
+	  -> Device Configuration
+	     -> Operating frequency : 40Mhz
+
+	     Enable <- Press the Button here or in "Network -> Wireless"
+
+  System -> Software -> #Update Package List
+
+  # PPPOE
+  ## Optimal modem's internet connection is in BRIDGE mode
+  Network -> Interfaces -> Interface Overview -> Wan(eth1) -> Edit
+	  -> Common Configuration
+	     -> Protocal : PPPoE
+#+END_EXAMPLE
+
+*** IPTV Testing
+**** wndr3700v2 in DHCP mode
+Network topology:
+#+HEADER: :file ~/work/wiki/public_html/images/network/home_network/wndr3700v2_test.png
+#+BEGIN_SRC dot :results silent :exports none
+  digraph wndr3700v2 {
+	  isp [xlabel="Beijing Unicom", shape=point];
+	  r200o [shape=none, margin=0, xlabel="r200o", label=<
+	    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0">
+	      <TR>
+		<TD ROWSPAN="2">WAN</TD>
+		<TD COLSPAN="4">Internet: pppoe</TD>
+	      </TR>
+	      <TR>
+		<TD COLSPAN="4">IPTV: dhcp</TD>
+	      </TR>
+	      <TR>
+		<TD>LAN</TD>
+		<TD PORT="lan_r200o_1">1</TD>
+		<TD>2</TD>
+		<TD>3</TD>
+		<TD>4</TD>
+	      </TR>
+	    </TABLE>>];
+	  wndr3700v2 [shape=none, margin=0, xlabel="wndr3700v2", label=<
+	    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0">
+	      <TR>
+		<TD PORT="wan_3700v2">WAN</TD>
+		<TD COLSPAN="4">Internet: dhcp</TD>
+	      </TR>
+	      <TR>
+		<TD>LAN</TD>
+		<TD PORT="lan_3700v2_1">1</TD>
+		<TD>2</TD>
+		<TD>3</TD>
+		<TD>4</TD>
+	      </TR>
+	    </TABLE>>];
+	  pc [label="Hobbiton"];
+
+	  isp -> r200o;
+	  r200o:lan_r200o_1:c -> wndr3700v2:wan_3700v2:c [headclip=false, tailclip=false];
+	  wndr3700v2:lan_3700v2_1:c -> pc [tailclip=false];
+  }
+#+END_SRC
+
+r200o settings:
+#+BEGIN_EXAMPLE
+  # Use Internet PPPoE, Port Binding.
+  WAN -> WAN配置
+      -> 1_INTERNET_R_VID_3961
+	 基本信息
+		-> 封装类型 : PPPoE
+		-> 协议类型 : IPv4
+       		-> WAN类型 : 路由WAN
+       		-> 服务类型 : Internet
+       		...
+       		-> MRU : 1492
+       		...
+       		-> 绑定项 : ☑LAN1 ☐LAN2 ☑LAN3 ☑LAN4
+	 IPv4信息
+		-> IP地址获取方式 : PPPoE
+		-> 使能NAT : ☑
+		-> NAT类型 : 端口受限锥形NAT
+		...
+		组播VLAN : 4000  <--IMPORTANT!!
+#+END_EXAMPLE
+Specify multicast vlan ID will combine multicast traffic together with
+normal internet traffic. This is especially useful for watching iptv
+live cast stream with Potplayer/VLC. Use port binding will remove vlan
+tags (3961 and 4000) inside r200o.
+
+wndr3700v2 settings:
+#+BEGIN_EXAMPLE
+  # Disable Wireless
+  Network -> Wireless -> Wireless Overview
+	  -> Atheros AR9220 802.11an (radio1)
+	     Click "Disable" (WILL show "Enable")
+
+  # Change configuration IP to be different to r7800
+  Network -> Interfaces -> Interface Overview
+	  -> LAN (br-lan)
+	     -> Edit
+		-> Common Configuration
+	      	   -> General Setup
+		      -> IPv4 Address : 192.168.2.1
+
+  ## Refresh DHCP
+  dhcpcd --release   # kill dhcpcd process if needed!
+  dhcpcd↲
+  ip route list↲     # verify ROUTE info
+
+  # Install igmpproxy
+  System -> Software
+       	    -> Actions
+	       Download and install package: igmpporxy <- Press "OK"
+	    OR
+	    -> Status
+	       -> Available Packages
+	     	  Find igmpproxy in "I" category, install it
+#+END_EXAMPLE
+According to [[https://wiki.openwrt.org/doc/howto/udp_multicast][OPENWRT::IPTV::HOWTO]], config IGMPProxy as:
+#+BEGIN_EXAMPLE
+  ssh root@192.168.2.1↲  <-  wndr3700v2's ip
+  ...
+
+  logread | grep -i igmp↲
+  --------------------------------------
+  ...
+  # ...user.warn igmpproxy[21596]: The source address 192.168.1.100 for
+  # group 239.2.1.91, is not in any valid net for upstream VIF.
+  ...
+  # ...user.warn igmpproxy[12318]: The source address 202.106.212.249 for
+  # group 239.2.1.131, is not in any valid net for upstream VIF.
+  ...
+  --------------------------------------
+
+  # Let IGMPProxy to add related firewall rules:
+  vi /etc/config/igmpproxy↲
+  ---------------------------------------
+  config igmpproxy
+	  option quickleave 1
+  #	option verbose [0-2]
+
+  config phyint wan
+	  option network wan
+	  option direction upstream
+	  list altnet 192.168.1.0/24
+	  list altnet 202.106.212.0/24
+
+  config phyint lan
+	  option network lan
+	  option direction downstream
+  ---------------------------------------
+
+  /etc/init.d/igmpproxy restart
+  # Check IGMP related firewall rules with Luci or:
+  iptables -L | grep -i igmp
+  # Don't use UCI because IGMPProxy is NOT working with it!
+#+END_EXAMPLE
+NOTE:
+LEDE-Project uses a patched version of ~igmpproxy~[fn:1], which can be viewed [[https://github.com/lede-project/source/tree/v17.01.4/package/network/services/igmpproxy/patches][here]]. As of LEDE 17.01.04, the version number is ~igmpproxy-0.1-9~.
+The ~list altnet ...~ is described in ~doc/igmpproxy.conf.5.in~:
+#+BEGIN_QUOTE
+Defines alternate sources for multicasting and IGMP data. The network
+address must be on the following format 'a.b.c.d/n'. By default the
+router will accept data from sources on the same network as configured
+on an interface. If the multicast source lies on a remote network, one
+must define from where traffic should be accepted.
+
+This is especially useful for the upstream interface, since the source
+for multicast traffic is often from a remote location. Any number of
+altnet parameters can be specified.
+#+END_QUOTE
+
+The detail call graph[fn:2]:
+#+BEGIN_SRC C
+  igmpproxy.c:
+
+  /**
+  ,*   Main daemon loop.
+  ,*/
+  void igmpProxyRun() {
+    ...
+    acceptIgmp(recvlen);
+    ...
+  }
+
+  igmp.c:
+
+  /**
+   ,* Process a newly received IGMP packet that is sitting in the input
+   ,* packet buffer.
+   ,*/
+  void acceptIgmp(int recvlen) {
+    ...
+    else if(!isAdressValidForIf(checkVIF, src)) {
+      struct IfDesc *downVIF = getIfByAddress(src);
+      if (downVIF && downVIF->state & IF_STATE_DOWNSTREAM) {
+	my_log(LOG_NOTICE, 0, "The source address %s for group %s is from downstream VIF. Ignoring.",
+	       inetFmt(src, s1), inetFmt(dst, s2));
+      } else {
+	my_log(LOG_WARNING, 0, "The source address %s for group %s, is not in any valid net for upstream VIF.",
+                          inetFmt(src, s1), inetFmt(dst, s2));
+      }
+      return;
+    }
+            
+    // Activate the route.
+    my_log(LOG_DEBUG, 0, "Route activate request from %s to %s",
+	   inetFmt(src,s1), inetFmt(dst,s2));
+    activateRoute(dst, src);
+    ...
+  }
+
+  ifvc.c:
+
+  /**
+  ,*   Function that checks if a given ipaddress is a valid
+  ,*   address for the supplied VIF.
+  ,*/
+  int isAdressValidForIf( struct IfDesc* intrface, uint32_t ipaddr ) {
+      struct SubnetList   *currsubnet;
+    
+      if(intrface == NULL) {
+          return 0;
+      }
+      // Loop through all registered allowed nets of the VIF...
+      for(currsubnet = intrface->allowednets; currsubnet != NULL; currsubnet = currsubnet->next) {
+          // Check if the ip falls in under the subnet....
+          if((ipaddr & currsubnet->subnet_mask) == currsubnet->subnet_addr) {
+              return 1;
+          }
+      }
+      return 0;
+  }
+#+END_SRC
+IGMPProxy uses _Linux Kernel Multicast Routing API_ to (de)activate the route. Consult [[https://www.tldp.org/HOWTO/Multicast-HOWTO.html][here]] for further details.
+
+**** wndr3700v2 in PPPoE mode
+r200o: 
+~1_INTERNET_B_VID_3961~ in *BRIDGE* mode.
+~3_IPTV_R_VID_3964~ in *DHCP* mode.
+#+BEGIN_EXAMPLE
+  # LEDE:
+  ## Preparation:
+
+  System -> Software
+	 install tcpdump
+  ### Use tcpdump to analyze packet's infomation
+  $ tcpdump -i eth1 -n -e -v↲
+  $ tcpdump -i eth1.3964 -n -v igmp↲
+  07:51:57.855651 xx:xx:xx:xx:xx:xx > 01:00:5e:00:00:01, ethertype IPv4 (0x0800), length 60: (tos 0xc0, ttl 1, id 0, offset 0, flags [none], proto IGMP (2), length 32, options (RA))
+      192.168.1.100 > 224.0.0.1: igmp query v2  ❶
+
+  [Keep WAN/WAN6 temporarily for failsafe purpose!]
+  Network -> Interfaces -> Interface Overview
+	  -> WAN -> Edit
+		 -> Protocal: Unmanaged
+	  -> WAN6 -> Edit
+	   	  -> Protocal: Unmanaged
+  ----------------------------------------------------
+  Network -> Interfaces -> Add new interfaces...
+	  Create Interface
+	    Name of the new interface: internet
+	    Protocal of the new interface: PPPoE
+	    Cover the following interface: ⊙Custom Interface: eth1.3961
+	  	    	      		 	    	       Submit↲
+
+          [Jump to page]:					     
+          Interfaces - INTERNET
+	  -> Common Configuration
+	     -> General Setup
+		PAP/CHAP username: xxx
+		PAP/CHAP password: xxx
+	     -> Physical Settings
+		⊙ Software VLAN: "eth1.3961"(internet)
+	     -> Firewall Settings
+		⊙ internet:
+		Save & Apply↲
+
+	  Create Interface
+	    Name of the new interface: iptv
+	    Protocal of the new interface: Static address
+	    Cover the following interface: ⊙Custom Interface: eth1.3964
+	  	    	      		 	  	       Submit↲
+	  [Jump to page]:
+	  Interfaces - IPTV
+	  -> Common Configuration
+	     -> General Setup
+		IPv4 address: 192.168.100.252
+		IPv4 netmask: 255.255.255.0
+		IPv4 gateway: ❷
+	     -> Physical Settings
+		⊙ Software VLAN: "eth1.3964"(iptv)
+	     -> Firewall Setttings
+		⊙ unspecified -or- create: iptv ❸
+		Save & Apply↲
+
+  Network -> Firewall -> Firewall - Zone Setttings
+	  -> Zones
+	     -> iptv: ... Edit↲
+		-> Zone "iptv"
+	      	   -> General Settings
+		      Input: reject
+		      Masquerading: ☑
+		      Covered networks: ☑ iptv:
+		   -> Inter-Zone Forwarding
+		      Allow Forward from source zones: ☑ lan: lan:
+		      Save & Apply↲
+#+END_EXAMPLE
+❶
+Help to verify that IGMPProxy receives IGMP Query message from
+upstream and manages multicast route to downstream correctly.
+
+~01:00:5e:00:00:01~ is a multicast mac address that can be mapped to
+the multicast ip address ~224.0.0.1~[fn:3], which is "The All Hosts
+multicast group addresses all hosts on the same network segment".[fn:4]
+
+❷
+According to [[https://lede-project.org/docs/user-guide/routes_configuration][IPv4 Routes]], empty ~gateway~ field means:
+#+BEGIN_QUOTE
+interface:
+Specifies the logical interface name of the parent (or master)
+interface this route belongs to; must refer to one of the defined
+interface sections.
+
+gateway:
+If omitted, the gateway from the parent interface is taken; if set to
+0.0.0.0 no gateway will be specified for the route
+#+END_QUOTE
+Only one gateway of ~eth1.3961~ and ~eth1.3964~ can exist[fn:5]. 
+
+❸
+If there is no zone called 'iptv' exists, Lede's firewall will complain:
+#+BEGIN_EXAMPLE
+  /etc/init.d/firewall restart↲
+  ...
+  Warning: Warning: ubus rule (ubus:igmpproxy[instance1] rule 0) refers to not existing zone 'iptv'
+  Warning: Warning: ubus rule (ubus:igmpproxy[instance1] rule 1) refers to not existing zone 'iptv'
+  ...
+#+END_EXAMPLE
+And the required firewall rules, which enables multicast udp traffics
+to pass through, will NOT be created automatically.
+#+BEGIN_SRC sh
+  /etc/init.d/igmpproxy:
+
+  igmp_add_firewall_routing() {
+	  config_get network $1 network
+	  config_get direction $1 direction
+
+	  [[ "$direction" = "downstream" ]] || return 0
+
+	  json_add_object ""
+	  json_add_string type rule
+	  json_add_string src "$upstream"
+	  json_add_string dest "$network"
+	  json_add_string family ipv4
+	  json_add_string proto udp
+	  json_add_string dest_ip "224.0.0.0/4"
+	  json_add_string target ACCEPT
+	  json_close_object
+  }
+#+END_SRC
+
+~/etc/config/igmpproxy~:
+#+BEGIN_EXAMPLE
+  config igmpproxy
+	  option quickleave 1
+  #	option verbose [0-2]
+
+  config phyint iptv 
+	  option network iptv
+	  option direction upstream
+	  list altnet 192.168.1.0/24
+	  list altnet 202.106.212.0/24
+
+  config phyint lan
+	  option network lan
+	  option direction downstream
+#+END_EXAMPLE
+
+**** using static route
+#+BEGIN_EXAMPLE
+  LEDE 17.01.04
+
+  Network -> Static Routes -> Static IPv4 Routes -> Add
+
+  # As shown in the following table.
+#+END_EXAMPLE
+| Interface |        Target |  IPv4 Netmask |   IPv4 Gateway | Metric | MTU | Route type | My Note         |
+| iptv      | 202.106.212.0 | 255.255.254.0 | 192.168.100.1❶ |        |     | unicast    | 90%正在登录系统 |
+| iptv      |    210.13.0.0 | 255.255.224.0 |  192.168.100.1 |        |     | unicast    |                 |
+| iptv      |   61.135.88.0 | 255.255.254.0 |  192.168.100.1 |        |     | unicast    |                 |
+| iptv      |    61.149.3.0 | 255.255.255.0 |  192.168.100.1 |        |     | unicast    | ❷               |
+
+❶ 
+Setting gateway here, not when creating the IPTV interface, is to
+avoid conflicting with the gateway of PPPoE interface[fn:5].
+
+❷
+主界面，点击"IPTV"后，显示：
+#+BEGIN_EXAMPLE
+    屏幕上方正中，接连显示：
+
+    业:00000;正在获取频道列表请稍候...
+    业-00000;正在获取业务入口请稍候...
+    业:00000;正在进行epg连接请稍候...
+
+    然后，屏幕左下：
+    正在进入，请稍候
+#+END_EXAMPLE
+
+* Appendix III. R7800 source code
+Source code package can be obtained from [[https://kb.netgear.com/2649/NETGEAR-Open-Source-Code-for-Programmers-GPL][Netgear Open Source Code for Programmers(GPL)]].
+Naming conventions in related scripts:
+#+BEGIN_EXAMPLE
+  .../package/base-files/files/lib/cfgmgr/enet.sh:
+
+  # this file is target depedent, it provids
+  # 1. following variables :
+  #      RawEth=         # name of raw eth NIF. not assigned means 2 eth NIFs, otherwise 1 eth NIF.
+  #      RawEthLan=      # name of raw eth NIF for lan.
+  #      RawEthWan=      # name of raw eth NIF for wan.
+  #      WanIndepPhy=    # 0 means RawEthWan doesn't have independent phy (ie. connects to switch).
+  #                      # 1 means RawEthWan has independent phy (ie. doesn't connects to switch).
+  # 2. following functions :
+  #      et_init()       # initialize ethernet & switch.
+  #      sw_configvlan() # configure switch vlan for all kind of opmode.
+  #
+
+  RawEth=
+  RawEthLan=eth1
+  RawEthWan=eth0
+  WanIndepPhy=0
+  ...
+
+  # for ap148-r7500 (8327 switch) : 
+  #    sw port0 -> CPU (RawEthWan)
+  #    sw port6 -> CPU (RawEthLan) 
+  #    sw port1 -> LAN4 
+  #    sw port2 -> LAN3 
+  #    sw port3 -> LAN2 
+  #    sw port4 -> LAN1 
+  #    sw port5 -> WAN 
+
+  .../package/base-files/files/lib/cfgmgr/opmode.sh:
+
+  # name of NIF :
+  #   Eth Lan NIF will always be "ethlan"
+  #   Eth Wan NIF will always be "ethwan"
+  #   Lan NIF will always be "br0"
+  #   Wan NIF will be "brwan" or "ppp0"
+
+  .../package/base-files/files/etc/rc.common:
+
+  LAN_IF=ethlan
+  BR_IF=br0
+  WAN_IF=brwan
+#+END_EXAMPLE
+VLAN settings:
+~#swconfig dev switch0 show↲~
+| Port | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+| PVID | 0 | 1 | 3 | 3 | 3 | 0 | 3 |
+
+#+BEGIN_EXAMPLE
+  VLAN 1:
+          vid: 3964
+          ports: 0t 1 5t 6t 
+  VLAN 2:
+          vid: 3961
+          ports: 0t 5t 
+  VLAN 3:
+          vid: 1
+          ports: 2 3 4 6
+#+END_EXAMPLE
+* Appendix IV. Multicast VLAN
+wndr3700v2:
+In PPPoE mode as described in Appendix II.
+r200o:
+| WAN配置          | 1_Internet_B_VID_3961  | 3_IPTV_R_VID_3964 |
+| WAN类型          | 桥接WAN                | 路由WAN           |
+| 绑定项           | 无                     | LAN2              |
+| 组播VLAN         | 4000                   | 同左              |
+| 组播配置         | snooping(IPoEAndPPPoE) | 同左              |
+| VLAN绑定配置     | 3961/3961,3964/3964    | 同左              |
+| 出口组播VLAN动作 | 不关注                 | 同左              |
+
+NOTE: 
+igmp query, eth1.3964有（eth1显然也能看见）， eth1.3961无。
+电脑播放rtp://， udp组播流从eth1.3964进入路由， eth1.3961无。
+
+1_Internet_B_VID_3961， 组播VLAN填不填结果一样。
+#+BEGIN_EXAMPLE
+  $ tcpdump -i eth1 -e -n igmp
+  ... ethertype 802.1Q (0x8100), length 64: vlan 3964, p 0, ethertype IPv4, 192.168.1.100 > 224.0.0.1: igmp query v2
+#+END_EXAMPLE
+3_IPTV_R_VID_3964，不填组播VLAN(4000)的话:
+igmp query， eth1无， eth1.3964无， eth1.3961无。
+电脑播放失败。
+internet wan填4000， iptv wan不填， 结果同上不填iptv里4000的情况。
+两者都不填：
+出口组播VLAN动作 : 指定
+| VLAN值 | igmp query | mpv |
+|   4000 | ✘          | ✘   |
+|   3964 | ✘          | ✘   |
+|   3961 | ✘          | ✘   |
+剥离和透传， 结果也都失败。
+* Appendix V. Route rules
+r200o's route rules:
+#+BEGIN_EXAMPLE
+  SU_WAP> ip rule↲
+
+  0:	from all lookup local 
+  0:	from all fwmark 0x202001 lookup 200 
+  0:	from all fwmark 0x1f790001 lookup 200 
+  0:	from all fwmark 0x1f790004 lookup 200 
+  32690:	from 10.143.x.xxx lookup 101	  <- VOIP interface IP
+  32690:	from 10.127.x.xxx lookup 102 	  <- IPTV interface IP
+  32700:	from all fwmark 0x1f7c0001 lookup lan2 
+  32700:	from all fwmark 0x1f7c0004 lookup lan2 
+  32766:	from all lookup main 
+  32767:	from all lookup default 
+
+  success!
+#+END_EXAMPLE
+* Appendix VI. Notes
+#+BEGIN_EXAMPLE
+  https://tieba.baidu.com/p/5552285991
+  2楼, 陈rchbk
+  把那个IPTV的WAN干掉，新建一个业务类型是other，vlan id是3964，组播vlan
+  是3996的wan，绑定lan4口。开启光猫的igmp功能。
+
+  3楼, 陈rchbk
+  注意如果业务类型选IPTV，只适合路由模式。如果桥接并绑定端口，业务类型要
+  选择other，这样绑定的LAN口获得的IP就不会是光猫的IP了。
+#+END_EXAMPLE
+
+interface.vlanid
+https://wiki.openwrt.org/doc/uci/network/switch
+#+BEGIN_EXAMPLE
+  According to what the contributors of this section have read online,
+  so far seems that the packet will be tagged by default, because they
+  are associated to one physical ports that at most will have one PVID
+  (port vlan id) but more than one virtual interfaces. Therefore, having
+  multiple virtual interfaces, the packets must be tagged else it won't
+  make sense, they won't be able to reach the interfaces or to go out.
+#+END_EXAMPLE
+* Footnotes
+
+[fn:6] [[https://github.com/transmission/transmission/wiki/Why-is-my-port-closed%253F][Transmission::WIKI::Why is my port closed?]]
+
+[fn:5] It defines the default route of ~pppoe-internet~ or ~eth1.3964~, exclusively.
+
+[fn:4] [[https://en.wikipedia.org/wiki/Muticast_address][Multicast address]]
+
+[fn:3] [[https://technet.microsoft.com/en-us/library/cc957928.aspx][Mapping IP Multicast to MAC-Layer Multicast]]
+
+[fn:2] How to apply multiple patch files to source codes:
+#+BEGIN_EXAMPLE
+  cd .../igmpproxy-0.1↲
+
+  ls↲
+  ...
+  configure.ac doc/ src/
+  ...
+
+  # option '-pNum':
+  #   Strip  the  smallest prefix containing Num leading
+  #   slashes from each file name found in the patch file.
+  #   e.g.
+  #   cat igmpproxy/patches/010-missing_include.patch↲
+  #
+  #   --- a/src/os-linux.h
+  #   +++ b/src/os-linux.h
+  #   ...
+  #
+  #   '/src/os-linux.h' --strip Num=1 leading slash--> current directory
+  patch -p1 < /path/to/patch files/*.patch↲
+#+END_EXAMPLE
+
+[fn:1] Original source codes are on [[https://sourceforge.net/projects/igmpproxy/][Sourceforge]].
+
