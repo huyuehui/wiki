@@ -633,7 +633,49 @@ For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]
 Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo/tree/master/app-editors/visual-studio-code][jorgicio: visual-studio-code 1.4.0]].
 See [[*External Overlay][External Overlay]].
 
-Various programming language support: [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
+Various programming language support:
++ [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
++ [[https://code.visualstudio.com/docs/languages/go][GOLANG extension]]
+You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplac]]e.
+
+#+BEGIN_EXAMPLE
+  # To bypass the Great Firewall
+  ## BASH:
+  git config --global http.proxy socks5://127.0.0.1:xxxx↲
+
+  # Press CTRL+, to customize user settings:
+  # VS Code -> USER SETTINGS:  ❶
+  {
+      "[cpp]": {
+          "editor.quickSuggestions": false
+      },
+      "[c]": {
+          "editor.quickSuggestions": false
+      },
+      "window.zoomLevel": 1,
+      "go.gopath": "~/work/go",
+      "go.inferGopath": true,
+      "go.toolsGopath": "~/work/go/tools",
+      "http.proxy": "socks5://127.0.0.1:xxxx",
+  }
+
+  # Revert the previous Git config
+  git config --global --unset http.proxy↲
+
+  # Use Delve to debug Go program. It seems that setting
+  # $PATH in ~/.bashrc takes no effect.  ❷
+  ## ~/.bash_profile
+  export PATH=~/work/go/tools/bin:$PATH
+#+END_EXAMPLE
+❶
++ [[https://github.com/Microsoft/vscode-go/wiki/GOPATH-in-the-VS-Code-Go-extension][GOPATH in the VS Code Go extension]]
++ [[https://github.com/Microsoft/vscode-go/issues/1525][go.inferGopath should not ignore global gopath #1525]]
++ [[https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code][Debugging Go code using VS Code]]
+
+❷ Other tools works fine without this setting.
++ [[https://github.com/Microsoft/vscode-go/issues/358#issuecomment-323528504][Insiders can't start Go debug session: "Cannot find Delve debugger. #358]]
+
+Press ~CTRL+SHIFT+P~, then run ~Go: Install/Update Tools~ to install needed tools.
 
 *** FFmpeg vs. Libav
 
@@ -685,10 +727,6 @@ Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 mpv also supports the VAAPI acceleration through the command-line
 option ~--hwdec=vaapi~[fn:9].
 
-
-* TODO Update Gigabyte BIOS
-
-每次升级BIOS后，需要重新使用efibootmgr修改UEFI Boot Menu。详见上一篇文档。
 
 * Footnotes
 
