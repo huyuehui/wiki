@@ -314,7 +314,7 @@ Now prepare for chrooting to the new Gentoo system:
 
 #+BEGIN_EXAMPLE
   # Installing a Portage Snapshot
-  emerge-websync
+  emerge-webrsync  ❶
 
   # OPTIONAL: Updating the Portage tree to the latest state
   emerge --sync
@@ -323,6 +323,22 @@ Now prepare for chrooting to the new Gentoo system:
   # console, you can add the --quiet option to speed up this process:)
   emerge --sync --quiet
 #+END_EXAMPLE
+❶ ~emerge-webrsync~ reads ~GENTOO_MIRRORS~ in ~make.conf~ to get Portage's snapshot:
+#+BEGIN_EXAMPLE
+  # /usr/bin/emerge-webrsync:
+
+  ...
+  do_snapshot() {
+    ...
+    for mirror in ${GENTOO_MIRRORS} ; do
+      mirror=${mirror%/}
+      __vecho "Trying to retrieve ${date} snapshot from ${mirror} ..."
+
+      ...
+  }
+#+END_EXAMPLE
+Refer to [[file:gentoo_setup.org::*repos.conf][New plug-in sync system]] for migrating to ~repos.conf~.
+
 If you are warned that a new Portage version is available and that you should update Portage, you should do it now using ~emerge --oneshot portage~. You might also be notified that "news items need reading". More on that next.
 
 #+BEGIN_EXAMPLE

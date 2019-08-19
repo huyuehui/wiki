@@ -59,6 +59,24 @@ According to [[http://wiki.gentoo.org/wiki/Version_specifier][Version Specifier]
 
 ** Local Portage Configure Files
 
+*** repos.conf
+There is a new plug-in sync system in ~>=sys-apps/portage-2.2.16~. Create ~/etc/portage/repos.conf/gentoo.conf~ if not exists:
+#+BEGIN_SRC emacs-lisp :exports results
+  (with-temp-buffer
+    (insert-file-contents "/etc/portage/repos.conf/gentoo.conf")
+    (buffer-string))
+#+END_SRC
+Make sure ~GENTOO_MIRRORS~ is set in ~/etc/portage/make.conf~ because it is required by ~emerge-webrsync~ which is used in ~webrsync~ sync type.
+
+You can sync the Portage tree as following:
+#+BEGIN_EXAMPLE
+  # -a, --auto Sync auto-sync enabled repos only
+  emaint sync -a↲
+
+  # SYNC a particular repo
+  emaint sync -r *repo_name*
+#+END_EXAMPLE
+
 *** package.use/*
 
 As for now, [2014-07-10 Thu 16:35], libav-10.2 & mpv-0.4.0 have been hard masked. Unmask them as following:
