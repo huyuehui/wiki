@@ -329,13 +329,17 @@ envvar ~INSIDE_EMACS~ should be set for pinentry to interact with Emacs.
   }
 #+END_SRC
 
-Start from ~v2.9.0~, Magit sets ~INSIDE_EMACS~ internally[fn:2]. To use
-pinentry in Emacs's minibuffer:
+Start from ~v2.9.0~, Magit sets ~INSIDE_EMACS~ internally[fn:2].o
+
+To use pinentry in Emacs's minibuffer, first ensure that package =pinentry= is loaded. Because it might NOT be included in =Emacs 26= by default. If not, install it from =el-get's= ELPA recipes. See [[file:../emacs/emacs_orgmode_setup.org::*Install package from ELPA][Install package from ELPA]] for details:
 #+BEGIN_EXAMPLE
-  # First, start Emacs's internal pinentry server
+  ## if pinentry is NOT installed
+  M-x el-get-install↲ pinentry↲
+
+  ## start Emacs's internal pinentry server
   M-x pinentry-start↲
 
-  # Second, show Magit's panel
+  ## show Magit's panel
   M-x magit-status↲
 #+END_EXAMPLE
 
