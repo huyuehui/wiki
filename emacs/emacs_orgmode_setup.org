@@ -162,6 +162,14 @@ A hard-coded css snippet, which can be put into =level-N.org= file, is shown bel
 This will embed the snippet directly into the =<head>= section of exported html files. 
 None of these two ways is a perfect solution. I prefer the external way for more elegant and less error-prone.
 
+The newest Emacs does NOT ship with =htmlize= by default. When publishing project, we have the following warning:
+#+BEGIN_EXAMPLE
+  Cannot fontify source block (htmlize.el >= 1.34 required) [7 times]
+
+  ## install htmlize using el-get
+  M-x el-get-install↲ htmlize↲
+#+END_EXAMPLE
+
 ** Project Configurations [fn:html_config]
 :PROPERTIES:
 :CUSTOM_ID: OrgmodeConfig
