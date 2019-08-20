@@ -113,18 +113,18 @@ Fundamental settings:
 		-> WAN类型 : 路由WAN
 		-> VLAN ID : 3010
 		-> 802.1p优先级 : 5
-		-> MTU : 1500  <- ①
+		-> MTU : 1492  <- ①
 		-> 绑定项 ： ☐LAN1 ☐LAN2 ☐LAN3 ☐LAN4
 		-> IP地址获取方式 : Static
-		-> IP地址 : 10.143.2.240
+		-> IP地址 : 10.189.90.191
 		-> 子网掩码 : 255.255.254.0
-		-> 默认网关 : 10.143.2.1
+		-> 默认网关 : 10.189.90.1
 
 	     -> 3_IPTV_R_VID_3964
 		-> WAN类型 : 路由WAN
 		-> VLAN ID : 3964
 		-> 802.1p优先级 : 4
-		-> MTU : 1492
+		-> MTU : 1460
 		-> IP地址获取方式 : DHCP
 		-> 使能NAT : ✔
 		-> 组播VLAN : 4000
@@ -161,14 +161,14 @@ Fundamental settings:
   系统工具
 	  -> 时间设置
 	     -> 自动同步网络时间服务器 : ☑
-	     -> 一级SNTP服务器 : time.nist.gov
-	     -> 二级SNTP服务器 : none
+	     -> 一级SNTP服务器 : 123.124.120.225
+	     -> 二级SNTP服务器 : ntp1.tummy.com
 	     -> 时间区域 : GMT+08:00 Beijing, Chongqing, Hong Kong, Urumqi
 	     -> 时间同步周期 : 86400
 	     -> WAN名称 : 1_INTERNET_R_VID_3961
 
   NOTE:
-  ① rg200O's backupsettings.conf uses 1492
+  ① kd-yun-811e's backupsettings.conf uses 1492
   ② excludes 192.168.100.251 ~ 192.168.100.254 for using in subordinate routers.
   ③ found in backupsettings.conf for r200o
 #+END_EXAMPLE
