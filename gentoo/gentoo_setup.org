@@ -67,6 +67,7 @@ There is a new plug-in sync system in ~>=sys-apps/portage-2.2.16~. Create ~/etc/
     (buffer-string))
 #+END_SRC
 Make sure ~GENTOO_MIRRORS~ is set in ~/etc/portage/make.conf~ because it is required by ~emerge-webrsync~ which is used in ~webrsync~ sync type.
+Refer to [[https://wiki.gentoo.org/wiki//etc/portage/repos.conf][Gentoo::Wiki::repos.conf]] and [[https://www.gentoo.org/news/2019/07/03/sks-key-poisoning.html][SKS keyserver poisoning]] for further details.
 
 You can sync the Portage tree as following:
 #+BEGIN_EXAMPLE
@@ -77,7 +78,7 @@ You can sync the Portage tree as following:
   emaint sync -r *repo_name*
 #+END_EXAMPLE
 
-*** package.use/*
+*** package.unmask/*
 
 As for now, [2014-07-10 Thu 16:35], libav-10.2 & mpv-0.4.0 have been hard masked. Unmask them as following:
 #+BEGIN_EXAMPLE
@@ -313,7 +314,7 @@ by default. *ENABLE* it to run ~fstrim~ periodically.
 usage, maybe a weekly fstrim is reasonable[fn:2].
 
 *** X Window System
-**** TODO Video[fn:3]
+**** Video[fn:3]
 ***** Kernel
 #+BEGIN_EXAMPLE
   # kernel .config:
@@ -464,6 +465,7 @@ not via the following command:
 
   emerge --ask --changed-use --deep @world↲
 #+END_EXAMPLE
+**** Audio[fn:10]
 **** X Server
 Additional USE flags:
 #+BEGIN_EXAMPLE
@@ -723,11 +725,59 @@ Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 *** Git
 #+BEGIN_EXAMPLE
   # package.use:
-  dev-vcs/git -perl -python
+  dev-vcs/git -perl
 
   emerge --ask dev-vcs/git↲
 #+END_EXAMPLE
 
+*** glider
+[[https://github.com/nadoo/glider][glider]] is a forward proxy with multiple protocols support, and also a dns forwarding server with ipset management features(like dnsmasq).
+**** Prerequisites 
+#+BEGIN_EXAMPLE
+  # $GOPATH/src/github.com/nadoo/glider/ipset/ipset_linux.go
+
+  func NewManager(rules []*rule.Config) (*Manager, error) {
+       fd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)    ❶
+       ...
+       // create ipset
+       for _, r := range rules {
+	   if r.IPSet != "" {
+	      CreateSet(fd, lsa, r.IPSet)
+	   }
+       }
+       ...
+  }
+
+  ...
+
+  // CreateSet create a ipset
+  func CreateSet(fd int, lsa syscall.SockaddrNetlink, setName string) {
+       ...
+       req := NewNetlinkRequest(IPSET_CMD_CREATE|(NFNL_SUBSYS_IPSET<<8), syscall.NLM_F_REQUEST)
+
+       // TODO: support AF_INET6
+       req.AddData(NewNfGenMsg(syscall.AF_INET, 0, 0))
+       req.AddData(NewRtAttr(IPSET_ATTR_PROTOCOL, Uint8Attr(IPSET_PROTOCOL)))
+       req.AddData(NewRtAttr(IPSET_ATTR_SETNAME, ZeroTerminated(setName)))
+       req.AddData(NewRtAttr(IPSET_ATTR_TYPENAME, ZeroTerminated("hash:net")))    ❷
+       req.AddData(NewRtAttr(IPSET_ATTR_REVISION, Uint8Attr(1)))
+       req.AddData(NewRtAttr(IPSET_ATTR_FAMILY, Uint8Attr(2)))
+       req.AddData(NewRtAttr(IPSET_ATTR_DATA|NLA_F_NESTED, nil))
+       ...
+  }
+
+  ❶ Without netfilter enabled in kernel, glider will complain about "protocol not supported".
+  ❷ The IPSET_ATTR_TYPENAME(hash:net) will be used to configure the kernel.
+#+END_EXAMPLE
+
+The kernel should be configured to support IPSet.
+#+BEGIN_EXAMPLE
+  [*] Networking Support   --->
+	Networking Options --->
+	  [*] Network packet filtering framework (Netfilter) --->
+		<*> IP set support --->
+		      <*> hash:net set support
+#+END_EXAMPLE
 *** MPV
 #+BEGIN_EXAMPLE
   # package.use:
@@ -747,6 +797,8 @@ option ~--hwdec=vaapi~[fn:9].
 
 
 * Footnotes
+
+[fn:10] [[https://wiki.gentoo.org/wiki/ALSA][Gentoo::Wiki::Alsa]] 
 
 [fn:1] ~/usr/portage/profiles/targets/desktop/package.use~
 
