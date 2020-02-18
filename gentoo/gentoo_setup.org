@@ -171,7 +171,7 @@ forget to add them manually.
 ** Overlay
 
 *** External Overlay
-Use visual-studio-code as example:
+Use vscodium-bin as example:
 #+BEGIN_EXAMPLE
   FILE: /etc/portage/repos.conf/jorgicio.conf
 
@@ -182,15 +182,15 @@ Use visual-studio-code as example:
   sync-uri = git://github.com/jorgicio/jorgicio-gentoo.git
   auto-sync = no
 #+END_EXAMPLE
-Bypass all packages except ~visual-studio-code~ in this overlay:
+Bypass all packages except ~vscodium-bin~ in this overlay:
 #+BEGIN_EXAMPLE
   /etc/portage/package.mask:
 
   ,*/*::jorgicio
 
-  /etc/portage/package.unmask/visual-studio-code:
+  /etc/portage/package.unmask/vscodium-bin:
 
-  app-editors/visual-studio-code::jorgicio
+  app-editors/vscodium-bin::jorgicio
 #+END_EXAMPLE
 Before you sync the external overlay for the first time, Portage will report this warning:
 #+BEGIN_EXAMPLE
@@ -207,7 +207,7 @@ It should be dispeared after you sync it:
 #+BEGIN_EXAMPLE
   emaint sync -r jorgicio↲
 
-  emerge --ask visual-studio-code↲
+  emerge --ask vscodium-bin↲
 #+END_EXAMPLE
 
 * Keep your Gentoo up to date
@@ -649,14 +649,38 @@ For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]
   emerge --ask p7zip↲
 #+END_EXAMPLE
 
-*** Visual Studio Code
-Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo/tree/master/app-editors/visual-studio-code][jorgicio: visual-studio-code 1.4.0]].
+*** VSCodium
+Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo-overlay/tree/master/app-editors/vscodium-bin][jorgicio: vscodium-bin 1.42.1]].
 See [[*External Overlay][External Overlay]].
+
+Migration from ~visual-studio-code~:
+#+BEGIN_EXAMPLE
+  # Update FVWM Menu's quick link.
+  # Replace the 'visual-studio-code' line with the following line.
+  vi ~/.fvwm/config↲
+
+  AddToMenu MenuFvwmUtilities     "$[gt.Utilities]" Title
+  ...
+  +                       "&C. Codium"    Exec exec codium
+  ...
+
+  # Migrate personal settings to VSCodium.  ❶❷
+  # Restore your old settings.
+
+  cp ~/.config/Code/User/{keybindings.json, settings.json} ~/.config/VSCodium/User
+
+  # For extensions
+  # Move to the new extension directory or just REINSTALL them.
+  cp -r ~/.vscode/extensions ~/.vscode-oss/
+
+  ❶ https://github.com/VSCodium/vscodium/blob/master/DOCS.md#migrating
+  ❷ In a fresh installation, run VSCodium for once to auto create private storage.
+#+END_EXAMPLE
 
 Various programming language support:
 + [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
 + [[https://code.visualstudio.com/docs/languages/go][GOLANG extension]]
-You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplac]]e.
+You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplace]].
 
 #+BEGIN_EXAMPLE
   # To bypass the Great Firewall
@@ -722,6 +746,14 @@ Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 
 #+END_EXAMPLE
 
+*** Fontforge
+#+BEGIN_EXAMPLE
+  # /etc/portage/package.use
+
+  media-gfx/fontforge cairo gtk png
+
+  $ emerge --ask fontforge↲
+#+END_EXAMPLE
 *** Git
 #+BEGIN_EXAMPLE
   # package.use:
