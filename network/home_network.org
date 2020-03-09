@@ -95,7 +95,7 @@ A new sa1456c, which has *NOT* been authenticated to Beijing ChinaUnicom, can be
   $
 #+END_EXAMPLE
 
-**** Configuration
+**** Configure sa1456c
 Fundamental settings:
 #+BEGIN_EXAMPLE
   WAN
@@ -290,6 +290,11 @@ to upload correctly[fn:6].
 | ①     |    2460 |
 | ❶      |    2776 |
 | ⊙     |    2299 |
+| ✖      |    2716 |
+| •      |    2022 |
+| ◦      |    25e6 |
+| ↑     |    2191 |
+| ↓     | 2193    |
 
 * Appendix II. Lede
 ** netgear wndr3700v2
@@ -811,9 +816,9 @@ internet wan填4000， iptv wan不填， 结果同上不填iptv里4000的情况�
 两者都不填：
 出口组播VLAN动作 : 指定
 | VLAN值 | igmp query | mpv |
-|   4000 | ✘          | ✘   |
-|   3964 | ✘          | ✘   |
-|   3961 | ✘          | ✘   |
+|   4000 | ✖           | ✖    |
+|   3964 | ✖           | ✖    |
+|   3961 | ✖           | ✖    |
 剥离和透传， 结果也都失败。
 * Appendix V. Route rules
 r200o's route rules:
