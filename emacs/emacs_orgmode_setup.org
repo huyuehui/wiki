@@ -90,7 +90,7 @@ Because of [[https://github.com/dimitri/el-get/commit/32631e33f5ea39bb7aff572a1f
   origin	https://code.orgmode.org/bzg/org-mode.git (fetch)
   origin	https://code.orgmode.org/bzg/org-mode.git (push)
 #+END_EXAMPLE
-Proxy may speed up this process, see [[file:~/work/wiki/org/gentoo/gentoo_setup.org::*Visual Studio Code][socks5 proxy]] for help.
+Proxy may speed up this process, see [[file:~/work/wiki/org/gentoo/gentoo_setup.org::*VSCodium][socks5 proxy]] for help.
 
 ** Setup HTML Export Configuration [fn:html_config]
 -----
