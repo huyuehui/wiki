@@ -294,7 +294,9 @@ to upload correctly[fn:6].
 | •      |    2022 |
 | ◦      |    25e6 |
 | ↑     |    2191 |
-| ↓     | 2193    |
+| ↓     |    2193 |
+| ⯆      |    2bc6 |
+| ⇒      |    21d2 |
 
 * Appendix II. Lede
 ** netgear wndr3700v2
@@ -677,6 +679,7 @@ to pass through, will NOT be created automatically.
   }
 #+END_SRC
 
+#+NAME: igmp
 ~/etc/config/igmpproxy~:
 #+BEGIN_EXAMPLE
   config igmpproxy
