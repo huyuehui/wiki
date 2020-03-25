@@ -869,7 +869,7 @@ https://wiki.openwrt.org/doc/uci/network/switch
 
 [fn:5] It defines the default route of ~pppoe-internet~ or ~eth1.3964~, exclusively.
 
-[fn:4] [[https://en.wikipedia.org/wiki/Muticast_address][Multicast address]]
+[fn:4] [[https://en.wikipedia.org/wiki/Multicast_address][Multicast address]]
 
 [fn:3] [[https://technet.microsoft.com/en-us/library/cc957928.aspx][Mapping IP Multicast to MAC-Layer Multicast]]
 
