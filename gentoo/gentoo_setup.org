@@ -476,6 +476,34 @@ Additional USE flags:
   dev-libs/libxml2 python
 #+END_EXAMPLE
 
+#+begin_example
+  Starting 2020-07-15, stable keyworded x11-base/xorg-server will
+  default to using the logind interface instead of suid by
+  default. resulting in better security by default through running the
+  server as a regular user instead of root. However, this will require
+  our users to use a logind provider such as elogind or systemd.
+#+end_example
+
+According to [[https://wiki.gentoo.org/wiki/Elogind][Gentoo::Wiki::elogind]], the following kernel options are
+recommended:
+#+begin_example
+  General setup  --->
+      [*] Control Group support  --->
+  File systems  --->
+      [*] Inotify support for userspace
+#+end_example
+
+And add the following use flags:
+#+begin_example
+  /etc/portage/make.conf:
+
+  USE="elogind -consolekit -systemd"
+
+  root# emerge --ask --changed-use --deep @world↲
+  root# /etc/init.d/elogind start↲
+  root# rc-update add elogind boot↲
+#+end_example
+
 #+BEGIN_EXAMPLE
   emerge --ask xorg-server↲
 #+END_EXAMPLE
@@ -492,7 +520,7 @@ Additional USE flags:
   emerge --ask fvwm
 
   # Create ~/.xinitrc, add:
-  exec fvwm
+  exec dbus-launch --exit-with-session fvwm
 
   # Config FVWM, run it for ONCE:
   startx↲
