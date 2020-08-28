@@ -584,6 +584,18 @@ A list of L10N values that can be used is provided as
 with ~l10n_~[fn:7].
 
 **** TODO Font
+*** Wayland
+**** sway
+*** Rust
+#+begin_example
+  # dev-lang/rust-1.45.2 requires MORE disk space than 8G tmpfs.
+  ...
+  ,* There is NOT at least 9216 MiB disk space at "/tmp/portage/dev-lang/rust-1.45.2/temp"
+  ...
+
+  # For now, use rust-bin instead.
+  emerge --ask rust-bin↲
+#+end_example
 *** Java
 
 According to [[http://wiki.gentoo.org/wiki/Java][Gentoo::Wiki::Java]], to install ~icedtea-bin~:
