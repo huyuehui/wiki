@@ -532,6 +532,17 @@ And add the following use flags:
 #+END_EXAMPLE
 See [[https://github.com/huyuehui/config/tree/master/fvwm][My FVWM's Configuration]] for details.
 
+Install additional X utils if needed:
+#+begin_example
+  # Root window parameter setting utility for X
+  emerge --ask x11-apps/xsetroot↲
+
+  # system load average display for X
+  emerge --ask x11-apps/xload↲
+
+  # mailbox flag for X 
+  emerge --ask x11-apps/xbiff↲
+#+end_example
 **** X Terminal
 #+BEGIN_EXAMPLE
   # package.use, add:
