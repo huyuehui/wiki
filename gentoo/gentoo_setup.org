@@ -685,10 +685,12 @@ To install ~oracle-jdk-bin~:
 *** emacs
 #+BEGIN_EXAMPLE
   # package.use
-  app-editors/emacs gif jpeg png svg tiff xft
+  >=app-editors/emacs-24.3 gif gui jpeg png svg tiff xft  ❶
+  >=app-emacs/emacs-common-gentoo-1.6-r4 gui  ❶
 
   emerge -a emacs↲
 #+END_EXAMPLE
+❶ See [[https://github.com/gentoo/gentoo/commit/d7fbd72efd2cc6096a71ac654e1659f12963dfe3#diff-266e679dd27537cb4847ad05a54c97f3][Migrate from X to gui USE flag.]] for the details of adding the "gui" USE flag.
 For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]].
 
 *** p7zip
