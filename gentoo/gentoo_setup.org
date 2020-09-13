@@ -58,7 +58,6 @@ According to [[http://wiki.gentoo.org/wiki/Version_specifier][Version Specifier]
    + category/package::overlay :: Matches a package from a specific overlay. This can be combined with other specifiers. The official portage tree is ::gentoo.
 
 ** Local Portage Configure Files
-
 *** repos.conf
 There is a new plug-in sync system in ~>=sys-apps/portage-2.2.16~. Create ~/etc/portage/repos.conf/gentoo.conf~ if not exists:
 #+BEGIN_SRC emacs-lisp :exports results
@@ -168,6 +167,26 @@ forget to add them manually.
   media-video/mpv lua luajit -sdl
 #+END_EXAMPLE
 
+*** package.accept_keywords/*
+Refer to [[https://wiki.gentoo.org/wiki/ACCEPT_KEYWORDS][Gentoo::Wiki::ACCEPT_KEYWORDS]] for details.
+#+begin_example
+  ...
+  ,** — Package is always visible (KEYWORDS are ignored completely).
+
+  The last choice is useful for live package versions
+  (e.g. SVN/Git/Mercurial package versions) because live ebuilds don't
+  have a KEYWORDS variable.
+  ...
+#+end_example
+Take ~gui-apps/wofi~[fn:11] as a example.
+#+begin_example
+  mkdir -p /etc/portage/package.accept_keywords/↲
+  vi wofi↲
+
+  gui-apps/wofi **
+  -------------------------------------------------
+  emerge --ask wofi↲
+#+end_example
 ** Overlay
 
 *** External Overlay
@@ -596,7 +615,57 @@ with ~l10n_~[fn:7].
 
 **** TODO Font
 *** Wayland
+#+begin_example
+  # Enable "wayland" USE flag globally
+  vi /etc/portage/make.conf↲
+
+  USE="wayland ..."
+
+  emerge -uaDN --with-bdeps=y @world↲
+#+end_example
 **** sway
+#+begin_example
+  # Installation
+  emerge --ask gui-wm/sway↲
+
+  # Configuration
+  mkdir -p ~/.config/sway/↲
+  cp /etc/sway/config ~/.config/sway/↲
+#+end_example
+**** alacritty
+#+begin_example
+  # Installation
+  emerge --ask x11-terms/alacritty↲
+
+  # Configuration
+  mkdir -p ~/.config/alacritty/↲
+  cp /usr/share/alacritty/scripts/alacritty.yml ~/.config/alacritty/↲
+#+end_example
+**** nwg-launchers
+Install ~nwg-launchers~ as application launcher for ~Sway~. Currently it is
+available in Gentoo's Guru repository.
+#+begin_example
+  # Setup Gentoo's guru repo as overlay  ❶
+  vi /etc/portage/repos.conf/guru.conf↲
+
+  [guru]
+  location = /var/db/repos/overlay/guru
+  sync-type = git
+  sync-uri = https://github.com/gentoo-mirror/guru.git
+  auto-sync = no
+  ----------------------------------------------------
+
+  vi /etc/portage/package.mask↲
+
+  ,*/*::guru
+  ----------------------------------------------------
+
+  cd /etc/portage/package.unmask↲
+  vi nwg-launchers↲
+
+  gui-apps/nwg-launchers::guru
+#+end_example
+❶ See [[https://wiki.gentoo.org/wiki/User:RarogCmex/Project:GURU/End_User_Guide][User guide for Guru repository]] for help.
 *** Rust
 #+begin_example
   # dev-lang/rust-1.45.2 requires MORE disk space than 8G tmpfs.
@@ -882,6 +951,8 @@ option ~--hwdec=vaapi~[fn:9].
 
 
 * Footnotes
+
+[fn:11]  [[https://github.com/gentoo-mirror/guru/tree/master/gui-apps/wofi][wofi's ebuild in the Gentoo's Guru repo]]. 
 
 [fn:10] [[https://wiki.gentoo.org/wiki/ALSA][Gentoo::Wiki::Alsa]] 
 
