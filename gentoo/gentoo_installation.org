@@ -607,10 +607,10 @@ One way to do SSD optimization is to put Chrome's default cache dir
 #+BEGIN_EXAMPLE
   # Create: /etc/profile.d/xdg_cache_home.sh
 
-  #!/bin/bash
-
-  export XDG_CACHE_HOME="/tmp/${USER}/.cache"
-
+  if [ $USER ]; then
+    export XDG_CACHE_HOME="/tmp/${USER}/.cache"
+  fi
+  -----------------------------------------------
   # Then RESTART X to put it into effect.
 #+END_EXAMPLE
 WARNING: With above change, auto unlocking the gnome keyring didn't
