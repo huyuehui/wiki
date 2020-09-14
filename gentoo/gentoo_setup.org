@@ -843,7 +843,7 @@ You can install the Go extension from the VS Code [[https://marketplace.visualst
 
 Press ~CTRL+SHIFT+P~, then run ~Go: Install/Update Tools~ to install needed tools.
 
-*** FFmpeg vs. Libav
+*** MPV & FFmpeg
 
 Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, we will switch from Libav to FFmpeg.
 
@@ -857,8 +857,8 @@ Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
   rm -r /etc/portage/profile↲
 
   # Adjust USE flags
-  >=media-video/ffmpeg-2.7 aac alsa fontconfig opengl truetype vorbis
-  >=media-video/mpv-0.7.3 bluray dvdnav jpeg lua -xscreensaver -xv
+  >=media-video/ffmpeg-2.7 alsa fontconfig opengl truetype vorbis
+  >=media-video/mpv-0.7.3 bluray dvd jpeg -xv
 
   # FFmpeg will be pulled in by mpv automatically
   emerge --ask mpv↲
