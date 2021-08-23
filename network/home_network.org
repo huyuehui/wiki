@@ -255,6 +255,86 @@ The stock firmware is ~1.0.2.28~, which can be automatically upgraded to the new
 | ⊙ | ☑      | IPTV     |    3964 |        0 | ☐Port1 ☐Port2 ☐Port3 ☑Port4 | ☐WIFI2.4G ☐WIFI5G |
 See [[Appendix III. R7800 source code]] for details behind the scene.
 
+* Switch: SG 200-08
+** Configuration
+SG 200-08's facotry default:
+|            IP | User name | Password | My Password   |
+| 192.168.1.254 | cisco     | cisco    | h*...*6@SG200 |
+#+begin_example
+  # NOTE
+  当交换机使用出厂默认IP地址时，其System LED将持续闪烁。当交换机使用DHCP分配
+  的IP地址或管理员配置的静态IP地址时，System LED将稳定亮起。
+
+  # Configure w/o upsteam R7800
+  ## Hobbiton
+  ## Verify your ip, if not in the same subnet with SG 200-08:
+  ip addr add 192.168.1.247/24 dev eno1↲
+  ## Then connect to http://192.168.1.254 via your browser.
+
+  # Configure w/ upsteam R7800(DHCP Server)
+  ## Hobbiton
+  ## Log in to R7800 and check SG 200-08's IP which is allocated via DHCP
+  ## Then connect to http://192.168.1.x via your browser
+
+  ## SG 200-08's Web Management UI
+  Administration -> Time Settings
+		    -> System Time
+		       -> Clock Source: ⦿ Use SNTP Server
+		       -> SNTP Recipient: ⦿ Unicast
+		       -> Timezone Source - DHCP: ☑ Enable
+		       Apply↲
+		    -> SNTP Settings
+		       Unicast Poll Interval: 7  ❶
+		       Apply↲
+		    -> Unicast SNTP Servers table
+		       Add...↲
+			 SNTP Server: 192.168.1.1
+			 ...
+			 Polling Mode: ☑ Enable
+			 ...
+			 Apply↲
+
+  ❶ The actual interval, in seconds, is the specified value to the power
+  of 2; for example, if you enter 4, the poll interval is 16 seconds.
+#+end_example
+Whenever you make some changes to the switch, it applies to the
+running configuration. To save these changes to the switch, do as
+shown below.
+#+begin_example
+  Adminitration
+	  -> File Management
+	     -> Copy/Save Configuration  ❶
+		Source File Name:      ⦿ Running Configuration  ❷
+		Destination File Name: ⦿ Startup Configuration
+
+  ❶ Or you can click '⮿Save' on the right top of every page.
+#+end_example
+❷
++ Running Configuration :: Current configuration, including any
+  changes applied in the current management session.
++ Startup Configuration :: Configuration file type used when the
+  switch last booted. This does not include any configuration changes
+  applied but not yet saved to the switch.
++ Backup Configuration :: Backup configuration file type saved on the switch.
++ Mirror Configuration :: If the Running Configuration is not modified
+  for at least 24 hours, it is automatically saved to the Mirror
+  Configuration file type.
+** Upgrade firmware
+
+#+begin_example
+  Administration
+    -> File Management
+       -> Upgrade/Backup Fireware/Language
+       Transfer Method:  ⦿ via HTTP
+       Save Action:      ⦿ Upgrade
+       File Type:	       ⦿ Firmware Image
+       Source File Name: SG200-08x_FW_1.0.8.3.stk  ❶
+       Apply↲
+
+    -> Reboot
+       Reboot↲
+#+end_example
+❶ Download from [[https://www.cisco.com/c/en/us/support/switches/sg200-08-8-port-gigabit-smart-switch/model.html#~tab-downloads][here]].
 * Application
 ** Transmission
 UPNP or manual port forwarding should be used for Transmission at PC
@@ -289,7 +369,7 @@ to upload correctly[fn:6].
 | ☑      |    2611 |
 | ①     |    2460 |
 | ❶      |    2776 |
-| ⊙     |    2299 |
+| ⦿      |    29bf |
 | ✖      |    2716 |
 | •      |    2022 |
 | ◦      |    25e6 |
@@ -297,6 +377,8 @@ to upload correctly[fn:6].
 | ↓     |    2193 |
 | ⯆      |    2bc6 |
 | ⇒      |    21d2 |
+| ⮿      |    2bbf |
+| 🅐      |   1f150 |
 
 * Appendix II. Lede
 ** netgear wndr3700v2
