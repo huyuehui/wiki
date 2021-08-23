@@ -167,8 +167,8 @@ forget to add them manually.
   media-video/mpv lua luajit -sdl
 #+END_EXAMPLE
 
-*** package.accept_keywords/*
-Refer to [[https://wiki.gentoo.org/wiki/ACCEPT_KEYWORDS][Gentoo::Wiki::ACCEPT_KEYWORDS]] for details.
+*** package.accept\under{}keywords/*
+Refer to [[https://wiki.gentoo.org/wiki/ACCEPT_KEYWORDS][Gentoo::Wiki::ACCEPT\under{}KEYWORDS]] for details.
 #+begin_example
   ...
   ,** — Package is always visible (KEYWORDS are ignored completely).
@@ -484,7 +484,76 @@ not via the following command:
 
   emerge --ask --changed-use --deep @world↲
 #+END_EXAMPLE
-**** Audio[fn:10]
+**** Audio
+References:
++ [[https://wiki.gentoo.org/wiki/ALSA][Gentoo::Wiki::Alsa]]
++ [[https://www.alsa-project.org/main/index.php/Asoundrc][Asoundrc]]
++ [[https://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html][ALSA::Plugin]]
++ [[https://alsa.opensrc.org/Asoundrc][ALSA Wiki::Asoundrc]]
+#+begin_example
+  # kernel .config
+  Device Drivers --->
+	 <*> Sound card support --->
+	     <*> Advanced Linux Sound Architecture --->
+		     HD Audio --->
+			<*> HD Audio PCI
+			...
+			<*> Build Realtek HD-audio codec support
+			...
+			-*- Enable generic HD-audio codec parser
+		 [*] USB Sound Devices --->
+		     <*> USB Sound/MIDI driver
+
+  # Install media-sound/alsa-utils
+  emerge --ask alsa-utils↲
+#+end_example
+Create =~/.asoundrc= if not exists.
+#+begin_src emacs-lisp :exports results
+  ;; ~/.asoundrc
+  (with-temp-buffer
+    (insert-file-contents "~/.asoundrc")
+    (buffer-string))
+#+end_src
+According to [[https://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html][ALSA::Plugin]], =~/.asoundrc= is annotated as shown below.
+#+begin_example
+  pcm.!default {                                ❶
+	  type plug                             ❷
+	  slave {                               ❸
+		  pcm {
+			  type dmix             ❹
+			  ipc_key 1024          ❺
+			  slave {
+				  pcm "hw:2,0"  ❻
+			  }
+		  }
+	  }
+  }
+
+  ctl.!default {
+	  type hw
+	  card SoundBar
+  }
+
+  ❶ The keyword default is defined in the ALSA lib API and will always
+  access hw:0,0 - the default device on the default
+  soundcard. Specifying the !default name supersedes the one defined in
+  the ALSA lib API.
+
+  ❷ Automatic conversion plugin
+  This plugin converts channels, rate and format on request.
+
+  ❸ A 'wrapper'(virtual device) of your pcm device.
+
+  ❹ This plugin provides direct mixing of multiple streams.
+
+  ❺ unique IPC key
+
+  ❻ The numbers after hw: stand for the sound card number and the device
+  number. A third number can be added (hw:0,0,0) for the sub-device
+  number, but it defaults to the next sub-device avaliable. The numbers
+  start from zero, so, for example, to access the first device on the
+  second sound card, you would use hw:1,0.
+#+end_example
 **** X Server
 Additional USE flags:
 #+BEGIN_EXAMPLE
@@ -772,10 +841,17 @@ For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]
 #+END_EXAMPLE
 
 *** VSCodium
+**** Install from Gentoo's official repository
+At [[https://gitweb.gentoo.org/repo/gentoo.git/commit/app-editors/vscodium?id=086fd563321cd912cf817b191685bcc3581e2cde][this commit]], VSCodium goes into Gentoo's official repo.
+#+begin_example
+  emerge --ask app-editors/vscodim↲
+#+end_example
+
+**** Install from overlay (obsolete)
 Install it use a third-party overlay: [[https://github.com/jorgicio/jorgicio-gentoo-overlay/tree/master/app-editors/vscodium-bin][jorgicio: vscodium-bin 1.42.1]].
 See [[*External Overlay][External Overlay]].
 
-Migration from ~visual-studio-code~:
+**** Migration from VSCode
 #+BEGIN_EXAMPLE
   # Update FVWM Menu's quick link.
   # Replace the 'visual-studio-code' line with the following line.
@@ -799,7 +875,26 @@ Migration from ~visual-studio-code~:
   ❷ In a fresh installation, run VSCodium for once to auto create private storage.
 #+END_EXAMPLE
 
-Various programming language support:
+**** Extensions
+***** Marketplace
+VSCodium uses ~open-vsx.org~ as extension gallery. It is not as mature
+as VSCode's marketplace for now. You can switch and use the VSCode's
+marketplace with the following steps. See [[https://github.com/VSCodium/vscodium/blob/master/DOCS.md#extensions-marketplace][this document]] for details.
+#+begin_example
+  # Create a custom 'product.json' at '$HOME/.config/VSCodium'
+
+  {
+    "extensionsGallery": {
+      "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
+      "cacheUrl": "https://vscode.blob.core.windows.net/gallery/index",
+      "itemUrl": "https://marketplace.visualstudio.com/items",
+      "controlUrl": "",
+      "recommendationsUrl": ""
+    }
+  }
+#+end_example
+
+***** Various programming language support
 + [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
 + [[https://code.visualstudio.com/docs/languages/go][GOLANG extension]]
 You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplace]].
@@ -953,8 +1048,6 @@ option ~--hwdec=vaapi~[fn:9].
 * Footnotes
 
 [fn:11]  [[https://github.com/gentoo-mirror/guru/tree/master/gui-apps/wofi][wofi's ebuild in the Gentoo's Guru repo]]. 
-
-[fn:10] [[https://wiki.gentoo.org/wiki/ALSA][Gentoo::Wiki::Alsa]] 
 
 [fn:1] ~/usr/portage/profiles/targets/desktop/package.use~
 
