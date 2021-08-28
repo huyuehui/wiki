@@ -745,6 +745,22 @@ available in Gentoo's Guru repository.
   # For now, use rust-bin instead.
   emerge --ask rust-bin↲
 #+end_example
+Deliberatly enable some USE flags of ~rust~, disk space required when
+compiling can be significantly reduced.
+#+begin_example
+  # /etc/portage/package.use
+
+  # rust
+  >=dev-lang/rust-1.54.0 nightly parallel-compiler rls system-llvm
+
+  emerge --ask dev-lang/rust↲
+
+  # choose between different rust versions
+  eselect rust list↲
+
+  # remove rust-bin if necessary
+  emerge --depclean dev-lang/rust-bin↲
+#+end_example
 *** Java
 
 According to [[http://wiki.gentoo.org/wiki/Java][Gentoo::Wiki::Java]], to install ~icedtea-bin~:
@@ -895,8 +911,8 @@ marketplace with the following steps. See [[https://github.com/VSCodium/vscodium
 #+end_example
 
 ***** Various programming language support
-+ [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
-+ [[https://code.visualstudio.com/docs/languages/go][GOLANG extension]]
+****** [[https://code.visualstudio.com/docs/languages/cpp][C/C++ extension]]
+****** [[https://code.visualstudio.com/docs/languages/go][GOLANG extension]]
 You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplace]].
 
 #+BEGIN_EXAMPLE
@@ -929,15 +945,29 @@ You can install the Go extension from the VS Code [[https://marketplace.visualst
   export PATH=~/work/go/tools/bin:$PATH
 #+END_EXAMPLE
 ❶
-+ [[https://github.com/Microsoft/vscode-go/wiki/GOPATH-in-the-VS-Code-Go-extension][GOPATH in the VS Code Go extension]]
-+ [[https://github.com/Microsoft/vscode-go/issues/1525][go.inferGopath should not ignore global gopath #1525]]
-+ [[https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code][Debugging Go code using VS Code]]
+- [[https://github.com/Microsoft/vscode-go/wiki/GOPATH-in-the-VS-Code-Go-extension][GOPATH in the VS Code Go extension]]
+- [[https://github.com/Microsoft/vscode-go/issues/1525][go.inferGopath should not ignore global gopath #1525]]
+- [[https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code][Debugging Go code using VS Code]]
 
 ❷ Other tools works fine without this setting.
-+ [[https://github.com/Microsoft/vscode-go/issues/358#issuecomment-323528504][Insiders can't start Go debug session: "Cannot find Delve debugger. #358]]
+- [[https://github.com/Microsoft/vscode-go/issues/358#issuecomment-323528504][Insiders can't start Go debug session: "Cannot find Delve debugger. #358]]
 
 Press ~CTRL+SHIFT+P~, then run ~Go: Install/Update Tools~ to install needed tools.
 
+****** [[https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer][rust-analyzer]]
+Ref: [[https://rust-analyzer.github.io/manual.html][rust-analyzer's manual]]
+
+rust-analyzer needs the sources of the standard library, which Gentoo
+doesn't provide as a stand-alone package in their official
+repositories. Enable the ~rls~ USE flag of your rust/rust-bin package
+can solve this issue.
+#+begin_example
+  # /etc/portage/package.use
+
+  # rust
+  >=dev-lang/rust-1.54.0 ... rls ...  ❸
+#+end_example
+❸ See [[*Rust]] for the complete USE flags.
 *** MPV & FFmpeg
 
 Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, we will switch from Libav to FFmpeg.
