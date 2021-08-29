@@ -93,14 +93,19 @@ As for now, [2014-07-10 Thu 16:35], libav-10.2 & mpv-0.4.0 have been hard masked
 #+END_EXAMPLE
 
 *** package.license
+Ref: [[https://wiki.gentoo.org/wiki/Handbook:AMD64/Working/Portage#Licenses][Gentoo::Handbook::Licenses]]
 
-google-chrome requires explicit license acknowledgement:
+Some packages requires explicit license acknowledgement:
 #+BEGIN_EXAMPLE
   cat /etc/portage/package.license↲
 
-  >=www-client/google-chrome-35.0.1916.114_p1 google-chrome
+  app-arch/p7zip unRAR
+  www-client/google-chrome google-chrome
 #+END_EXAMPLE
-
+A migration tool ~app-portage/elicense~ is available. It scans
+installed packages for licenses that are no longer accepted, and
+generates a list in the same format as the ~package.license~ file. See
+elicense's README for further details.
 *** package.use
 
 Custom USE flags for individual package. For USE flags defined in
