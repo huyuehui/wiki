@@ -558,6 +558,25 @@ According to [[https://www.alsa-project.org/alsa-doc/alsa-lib/pcm_plugins.html][
   number, but it defaults to the next sub-device avaliable. The numbers
   start from zero, so, for example, to access the first device on the
   second sound card, you would use hw:1,0.
+
+  Sound card number and device number can be get by running:
+
+  # Included in media-sound/alsa-utils
+  aplay -l↲
+
+  ,**** List of PLAYBACK Hardware Devices ****
+  card 0: HDMI [HDA Intel HDMI], device 3: Generic Digital [Generic Digital]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  card 1: PCH [HDA Intel PCH], device 0: ALC887-VD Analog [ALC887-VD Analog]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  card 1: PCH [HDA Intel PCH], device 1: ALC887-VD Digital [ALC887-VD Digital]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  card 2: SoundBar [Dell AC511 USB SoundBar], device 0: USB Audio [USB Audio]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
 #+end_example
 **** X Server
 Additional USE flags:
