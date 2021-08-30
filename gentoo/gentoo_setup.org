@@ -848,6 +848,26 @@ To install ~oracle-jdk-bin~:
 	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease
 	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease6
 #+END_EXAMPLE
+*** Upgrading GCC
+Reference: [[https://wiki.gentoo.org/wiki/Upgrading_GCC][Gentoo::Wiki::Upgrading GCC]]
+#+begin_example
+  # Check the current installed GCC versions.
+  gcc-config --list-profiles↲
+   [1] x86_64-pc-linux-gnu-5.4.0 *
+   [2] x86_64-pc-linux-gnu-6.4.0
+
+  gcc-config 2↲
+
+  source /etc/profile↲
+  emerge --ask --oneshot --usepkg=n sys-devel/libtool↲
+
+  # Check the current version number and then uninstall the old version:
+  gcc --version↲
+
+  emerge --ask --depclean sys-devel/gcc:5.4.0↲
+  or
+  emerge -ca↲
+#+end_example
 ** Applications
 
 *** vim
