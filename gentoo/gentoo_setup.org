@@ -882,15 +882,45 @@ Reference: [[https://wiki.gentoo.org/wiki/Upgrading_GCC][Gentoo::Wiki::Upgrading
 
 *** emacs
 #+BEGIN_EXAMPLE
-  # package.use
-  >=app-editors/emacs-24.3 gif gui jpeg png svg tiff xft  ❶
-  >=app-emacs/emacs-common-gentoo-1.6-r4 gui  ❶
+  # /etc/portage/package.use
+
+  # Emacs.
+  # commit d7fbd72efd2cc6096a71ac654e1659f12963dfe3
+  # Migrate from X to gui USE flag.
+  >=app-editors/emacs-24.3 gif gui jpeg png svg tiff gtk cairo harfbuzz xft  ❶ ❷
+  # required by app-editors/emacs-27.2::gentoo
+  # required by @selected
+  # required by @world (argument)
+  >=app-emacs/emacs-common-1.8 gui
 
   emerge -a emacs↲
 #+END_EXAMPLE
-❶ See [[https://github.com/gentoo/gentoo/commit/d7fbd72efd2cc6096a71ac654e1659f12963dfe3#diff-266e679dd27537cb4847ad05a54c97f3][Migrate from X to gui USE flag.]] for the details of adding the "gui" USE flag.
-For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]].
+❶ See [[https://github.com/gentoo/gentoo/commit/d7fbd72efd2cc6096a71ac654e1659f12963dfe3#diff-266e679dd27537cb4847ad05a54c97f3][Migrate from X to gui USE flag.]] for the details of adding the
+"gui" USE flag.  For further configurations, see [[../emacs/emacs_orgmode_setup.org][Setup Emacs]].
 
+❷ Enable ~cairo~ in Emacs to avoid [[https://github.com/googlefonts/Inconsolata/issues/42][this bug]]. Otherwise the ~Iosevka~
+fonts will be rendered with letter-spacing too wide in Emacs.
+
+According to [[https://www.masteringemacs.org/article/whats-new-in-emacs-27-1][this article]], building Emacs with ~cairo~ enabled results
+in using ~pango~ instead of ~libXft~ for font support. Gentoo still
+need to enable ~xft~ USE flag explicitly.
+#+begin_example
+  # /usr/portage/app-editors/emacs/emacs-27.2-r4.ebuild
+
+  xft? (
+	  media-libs/fontconfig
+	  media-libs/freetype
+	  x11-libs/libXft
+	  x11-libs/libXrender
+	  cairo? ( >=x11-libs/cairo-1.12.18 )
+	  harfbuzz? ( media-libs/harfbuzz:0= )
+	  m17n-lib? (
+		  >=dev-libs/libotf-0.9.4
+		  >=dev-libs/m17n-lib-1.5.1
+	  )
+  )
+#+end_example
+Enable ~harfbuzz~ USE flag for better font handling.
 *** p7zip
 #+BEGIN_EXAMPLE
   # Zip/Rar support
