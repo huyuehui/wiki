@@ -990,18 +990,14 @@ marketplace with the following steps. See [[https://github.com/VSCodium/vscodium
 You can install the Go extension from the VS Code [[https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go][marketplace]].
 
 #+BEGIN_EXAMPLE
-  # To bypass the Great Firewall
-  ## BASH:
-  git config --global http.proxy socks5://127.0.0.1:xxxx↲
-
   # Press CTRL+, to customize user settings:
   # VS Code -> USER SETTINGS:  ❶
   {
       "[cpp]": {
-          "editor.quickSuggestions": false
+	  "editor.quickSuggestions": false
       },
       "[c]": {
-          "editor.quickSuggestions": false
+	  "editor.quickSuggestions": false
       },
       "window.zoomLevel": 1,
       "go.gopath": "~/work/go",
@@ -1009,9 +1005,6 @@ You can install the Go extension from the VS Code [[https://marketplace.visualst
       "go.toolsGopath": "~/work/go/tools",
       "http.proxy": "socks5://127.0.0.1:xxxx",
   }
-
-  # Revert the previous Git config
-  git config --global --unset http.proxy↲
 
   # Use Delve to debug Go program. It seems that setting
   # $PATH in ~/.bashrc takes no effect.  ❷
@@ -1082,7 +1075,16 @@ Because ~mpv~[fn:8] prefers FFmpeg over Libav and ~Kodi(XBMC)~ requires FFmpeg, 
 
   emerge --ask dev-vcs/git↲
 #+END_EXAMPLE
+To bypass the GFW:
+#+begin_example
+  # Setup a socks5 proxy for Git
+  git config --global http.proxy socks5://127.0.0.1:xxxx↲
 
+  ...Do your work...
+
+  # Unset the socks5 proxy
+  git config --global --unset http.proxy
+#+end_example
 *** glider
 [[https://github.com/nadoo/glider][glider]] is a forward proxy with multiple protocols support, and also a dns forwarding server with ipset management features(like dnsmasq).
 **** Prerequisites 

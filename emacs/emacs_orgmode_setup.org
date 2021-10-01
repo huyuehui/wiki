@@ -56,6 +56,8 @@ Put package org-mode related [[#OrgmodeConfig][configurations]] into =init-org-m
 
 - =M-x el-get-update= :: Will prompt for an installed package name, with completion, then update it. This will run the =build= commands and =init= the package again.
 
+- =M-x el-get-update-all= :: Will update all packages that have the ~installed~ status in your status file. 
+
 *** Viewing available recipes
 - =M-x el-get-list-packages= :: Opens a buffer listing all known packages (those for which you have a recipe). The listing includes the package name, its status (one of available, installed, removed or required) and the package description. The description is a free form text and has not been provided for all recipes.
 
@@ -72,25 +74,49 @@ Then packages from ELPA can be browsed in =M-x el-get-list-packages↲=. [[Addin
 
 ** Update
 =M-x el-get-update RET org-mode RET=
-Because of [[https://github.com/dimitri/el-get/commit/32631e33f5ea39bb7aff572a1f2df9d451d54229#diff-8d94ee7843f4ef9f2950f073c9d67c3b][commit 32631e33f5]], el-get can't update org-mode now:
+According to [[https://list.orgmode.org/8735pz50bw.fsf@gnu.org/][Switching to new Git repositories]], el-get reports error when updating ~org-mode~.
 #+BEGIN_EXAMPLE
-  ## commit 32631e33f5
-  ## ~/.emacs.d/el-get/el-get/recipes/org-mode.rcp
-  From:
-  :url "git://orgmode.org/org-mode.git"
-  To:
-  :url "https://code.orgmode.org/bzg/org-mode.git"
+  # M-x el-get-update↲ org-mode↲
 
-  ## We should manually change the remote url in local repo
+  warning: redirecting to https://git.savannah.gnu.org/git/emacs/org-mode.git/
+  From https://code.orgmode.org/bzg/org-mode
+     b96aae468..8db21e6cb  main       -> origin/main
+  Your configuration specifies to merge with the ref 'refs/heads/master'
+  from the remote, but no such ref was fetched.
+
+  -------------------------------------------------------------------------------
+
   cd ~/.emacs.d/el-get/org-mode↲
-  git remote set-url origin https://code.orgmode.org/bzg/org-mode.git↲
-  ## Verify the current remote url
-  git remote -v↲
+  # Switch to the "master" branch:
+  git checkout master↲
+
+  # Rename it to "main":
+  git branch -m master main↲
+
+  # Get the latest commits and branches from the remote:
+  git fetch↲
+
+  # Remove the existing tracking connection with "origin/master":
+  git branch --unset-upstream
+
+  # Create a new tracking connection with the new "origin/main" branch:
+  git branch -u origin/main
+
+  --------------------------------------------------------------------------------
+
+  ## As for now, the old url would be auto redirected to the new url. We
+  ## can manually change the remote url in local repo.
+
+  cd ~/.emacs.d/el-get/org-mode↲
+  git remote set-url origin https://git.savannah.gnu.org/git/emacs/org-mode.git↲
+
+  ## Verify the current
+  remote url git remote -v↲
 
   origin	https://code.orgmode.org/bzg/org-mode.git (fetch)
   origin	https://code.orgmode.org/bzg/org-mode.git (push)
 #+END_EXAMPLE
-Proxy may speed up this process, see [[file:~/work/wiki/org/gentoo/gentoo_setup.org::*VSCodium][socks5 proxy]] for help.
+Proxy may speed up this process, see [[file:~/work/wiki/org/gentoo/gentoo_setup.org::Git][socks5 proxy]] for help.
 
 ** Setup HTML Export Configuration [fn:html_config]
 -----
