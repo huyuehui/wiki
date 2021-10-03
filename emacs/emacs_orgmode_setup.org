@@ -273,17 +273,18 @@ According to it's [[https://github.com/syl20bnr/spacemacs#install][Default Insta
   git clone --depth 1 https://github.com/syl20bnr/spacemacs ~/.emacs.d↲
   
   # Launch Emacs
-  ①
+  ① (ref:issue4807)
   ## If Spacemacs is launched for a fresh installation (without previous .spacemacs).
   ## Open a terminal and run:
   http_proxy=localhost:8080 https_proxy=localhost:8080 emacs↲
   
-  ②
+  ② (ref:dotspacemacs)
   ## Use previous .spacemacs.
-  cp PATH/TO/BACKUP/.spacemacs ~/↲  (ref:dotspacemacs)
+  cp PATH/TO/BACKUP/.spacemacs ~/↲
   ## Lauch your Spacemacs with correct proxy settings in ".spacemacs" or command line.
 #+end_example
-Here[[(dotspacemacs)]] is a sample ~.spacemacs~ file:
+Here [[(issue4807)]] refer to [[https://github.com/syl20bnr/spacemacs/issues/4807][Spacemacs::Issue4807]] for details. 
+Here [[(dotspacemacs)]], my currently using ~.spacemacs~ file is shown as bellow.
 #+begin_src emacs-lisp :exports results
   ;; ~/.spacemacs
   (with-temp-buffer
@@ -882,6 +883,7 @@ programe.
   StartupNotify=true
   StartupWMClass=Emacs
 #+end_example
+Tilde(=~=) expansion will be failed in Icon path.
 * Footnotes
 [fn:spacemacs_font] [[https://www.spacemacs.org/doc/DOCUMENTATION.html#font][Spacemacs::Font]] 
 
