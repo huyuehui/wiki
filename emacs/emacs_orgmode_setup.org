@@ -77,42 +77,42 @@ Then packages from ELPA can be browsed in =M-x el-get-list-packages↲=. [[Addin
 According to [[https://list.orgmode.org/8735pz50bw.fsf@gnu.org/][Switching to new Git repositories]], el-get reports error when updating ~org-mode~.
 #+BEGIN_EXAMPLE
   # M-x el-get-update↲ org-mode↲
-
+  
   warning: redirecting to https://git.savannah.gnu.org/git/emacs/org-mode.git/
   From https://code.orgmode.org/bzg/org-mode
      b96aae468..8db21e6cb  main       -> origin/main
   Your configuration specifies to merge with the ref 'refs/heads/master'
   from the remote, but no such ref was fetched.
-
+  
   -------------------------------------------------------------------------------
-
+  
   cd ~/.emacs.d/el-get/org-mode↲
   # Switch to the "master" branch:
   git checkout master↲
-
+  
   # Rename it to "main":
   git branch -m master main↲
-
+  
   # Get the latest commits and branches from the remote:
   git fetch↲
-
+  
   # Remove the existing tracking connection with "origin/master":
   git branch --unset-upstream
-
+  
   # Create a new tracking connection with the new "origin/main" branch:
   git branch -u origin/main
-
+  
   --------------------------------------------------------------------------------
-
+  
   ## As for now, the old url would be auto redirected to the new url. We
   ## can manually change the remote url in local repo.
-
+  
   cd ~/.emacs.d/el-get/org-mode↲
   git remote set-url origin https://git.savannah.gnu.org/git/emacs/org-mode.git↲
-
-  ## Verify the current
-  remote url git remote -v↲
-
+  
+  ## Verify the current remote url
+  git remote -v↲
+  
   origin	https://code.orgmode.org/bzg/org-mode.git (fetch)
   origin	https://code.orgmode.org/bzg/org-mode.git (push)
 #+END_EXAMPLE
@@ -264,6 +264,7 @@ Use [[https://github.com/pope/ob-go][ob-go]], which can be installed by el-get: 
 
 * Spacemacs
 Ref: [[https://www.spacemacs.org/doc/DOCUMENTATION.html][Spacemacs Documentation]]
+
 According to it's [[https://github.com/syl20bnr/spacemacs#install][Default Installation]] guide:
 #+begin_example
   # Backup your original Emacs configuration.
@@ -273,18 +274,19 @@ According to it's [[https://github.com/syl20bnr/spacemacs#install][Default Insta
   git clone --depth 1 https://github.com/syl20bnr/spacemacs ~/.emacs.d↲
   
   # Launch Emacs
-  ① (ref:issue4807)
+  ①
   ## If Spacemacs is launched for a fresh installation (without previous .spacemacs).
   ## Open a terminal and run:
   http_proxy=localhost:8080 https_proxy=localhost:8080 emacs↲
   
-  ② (ref:dotspacemacs)
+  ②
   ## Use previous .spacemacs.
   cp PATH/TO/BACKUP/.spacemacs ~/↲
   ## Lauch your Spacemacs with correct proxy settings in ".spacemacs" or command line.
 #+end_example
-Here [[(issue4807)]] refer to [[https://github.com/syl20bnr/spacemacs/issues/4807][Spacemacs::Issue4807]] for details. 
-Here [[(dotspacemacs)]], my currently using ~.spacemacs~ file is shown as bellow.
+① Refer to [[https://github.com/syl20bnr/spacemacs/issues/4807][Spacemacs::Issue4807]] for details.
+
+② My currently using ~.spacemacs~ file is shown as bellow.
 #+begin_src emacs-lisp :exports results
   ;; ~/.spacemacs
   (with-temp-buffer
@@ -328,7 +330,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(html
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -537,7 +539,7 @@ It should only modify the values of Spacemacs settings."
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
    dotspacemacs-default-font '("Migu 1M"
-                               :size 10.0
+                               :size 12.0
                                :weight normal
                                :width normal)
 
@@ -846,12 +848,135 @@ before packages are loaded."
   ;; ref: https://github.com/magit/magit/issues/3771
   (setq transient-default-level 5)
   ;; pinentry
-  (pinentry-start))
+  (pinentry-start)
+
+  ;; org-mode
+  (with-eval-after-load 'org
+    (setq org-confirm-babel-evaluate nil)
+
+    (org-babel-do-load-languages
+     'org-bable-load-languages
+     '(org-bable-load-languages
+       '(dot . t)
+       )
+     )
+
+    (setq org-publish-project-alist
+          '(
+            ("org-notes"
+             :base-directory "~/work/wiki/org"
+             :base-extension "org"
+             :exclude "level-[0-9].org"
+             :publishing-directory "~/work/wiki/public_html"
+             :recursive t
+             :publishing-function org-html-publish-to-html
+             :auto-sitemap t
+             )
+            ("org-css"
+             :base-directory "~/work/wiki/org/css"
+             :base-extension "css"
+             :publishing-directory "~/work/wiki/public_html/css"
+             :publishing-function org-publish-attachment
+             ("org" :components ("org-notes" "org-css"))
+             )
+            )
+          )
+    )
+  )
 
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   '(yasnippet web-mode web-beautify tagedit slim-mode scss-mode sass-mode pug-mode prettier-js impatient-mode simple-httpd helm-css-scss haml-mode emmet-mode counsel-css counsel swiper ivy company-web web-completion-data company add-node-modules-path ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org symon symbol-overlay string-inflection string-edit spaceline-all-the-icons smeargle restart-emacs rainbow-delimiters quickrun popwin pinentry pcre2el password-generator paradox overseer orgit-forge org-superstar org-rich-yank org-projectile org-present org-pomodoro org-mime org-download org-contrib org-cliplink open-junk-file nameless multi-line macrostep lorem-ipsum link-hint inspector info+ indent-guide hybrid-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
 #+end_example
+My personal modifications are describe as bellow.
+#+begin_src emacs-lisp :exports code :eval none :results none
+  ;; My .spacemacs changes
+  (setq-default
+   dotspacemacs-configuration-layers
+   '(html
+     ...
+     git
+     org
+     ...
+     treemacs)
+  
+   dotspacemacs-additional-packages '(pinentry)
+  
+   dotspacemacs-editing-style 'hybrid
+  
+   dotspacemacs-default-font '("Migu 1M"
+                               :size 12.0
+                               :weight normal
+                               :width normal)
+  
+   (defun dotspacemacs/user-init ()
+     ;; Proxy
+     (setq url-proxy-services
+           '(("no_proxy" . "^\\(localhost\\|10.*\\)")
+             ("http" . "localhost:8080")
+             ("https" . "localhost:8080"))))
+  
+   (defun dotspacemacs/user-config ()
+     ;; Show gpg sign options in Magit
+     ;; ref: https://github.com/magit/magit/issues/3771
+     (setq transient-default-level 5)
+     ;; pinentry
+     (pinentry-start)
+  
+     ;; org-mode
+     (with-eval-after-load 'org
+       (setq org-confirm-babel-evaluate nil)
+  
+       (org-babel-do-load-languages
+        'org-bable-load-languages
+        '(org-bable-load-languages
+          '(dot . t))
+        )
+  
+       (setq org-publish-project-alist
+             '(
+               ("org-notes"
+                :base-directory "~/work/wiki/org"
+                :base-extension "org"
+                :exclude "level-[0-9].org"
+                :publishing-directory "~/work/wiki/public_html"
+                :recursive t
+                :publishing-function org-html-publish-to-html
+                :auto-sitemap t
+                )
+               ("org-css"
+                :base-directory "~/work/wiki/org/css"
+                :base-extension "css"
+                :publishing-directory "~/work/wiki/public_html/css"
+                :publishing-function org-publish-attachment
+                ("org" :components ("org-notes" "org-css"))
+                )
+               )
+             )
+       )
+     )
+   )
+#+end_src
 
 You can modify HOME environment variable to quickly try Spacemacs
 without compromising your existing configuration.
@@ -861,6 +986,7 @@ without compromising your existing configuration.
   HOME=~/usr/spacemacs emacs↲  (ref:alter-home)
 #+end_example
 In line[[(alter-home)]], proxy settings are similar as described previously.
+
 There are some drawbacks when running Spacemacs in alternate HOME environment.
 + Changing ~dotspacemacs-default-font~ has no effect if your are running Emacs in terminal.[fn:spacemacs_font] 
 + GPG signing might fail in Magit.
