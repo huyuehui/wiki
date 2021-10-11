@@ -379,6 +379,7 @@ to upload correctly[fn:6].
 | ⇒      |    21d2 |
 | ⮿      |    2bbf |
 | 🅐      |   1f150 |
+| ⌵      |    2335 |
 
 * Appendix II. Lede
 ** netgear wndr3700v2
