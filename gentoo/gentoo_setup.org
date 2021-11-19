@@ -489,6 +489,24 @@ not via the following command:
 
   emerge --ask --changed-use --deep @world↲
 #+END_EXAMPLE
+
+After [[https://gitweb.gentoo.org/repo/gentoo.git/commit/x11-libs/libva/libva-2.13.0-r1.ebuild?id=564e4e3d1b14e0b5e88278c2cade94228af9a79c][this commit]], ~libva-intel-driver~ won't be pulled in automatically by
+setting ~VIDEO="intel i965"~ in ~make.conf~. It should be installed manually, as
+is suggested in the message shown after the installation of ~libva~.
+#+begin_example
+  # x11-libs/libva-2.13.0-r1.ebuild
+  
+  ...
+  pkg_postinst() {
+    optfeature_header
+    optfeature "NVIDIA GPU support" x11-libs/libva-vdpau-driver
+    optfeature "Older Intel GPU support" x11-libs/libva-intel-driver
+    optfeature "Newer Intel GPU support" x11-libs/libva-intel-media-driver
+  }
+  
+  # Install libva-intel-driver manually.
+  emerge --ask libva-intel-driver↲
+#+end_example
 **** Audio
 References:
 + [[https://wiki.gentoo.org/wiki/ALSA][Gentoo::Wiki::Alsa]]
@@ -1032,7 +1050,7 @@ can solve this issue.
   # /etc/portage/package.use
 
   # rust
-  >=dev-lang/rust-1.54.0 ... rls ...  ❸
+  >=dev-lang/rust-bin-1.54.0 ... rls ...  ❸
 #+end_example
 ❸ See [[*Rust]] for the complete USE flags.
 *** MPV & FFmpeg
