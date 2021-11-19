@@ -1042,15 +1042,14 @@ Press ~CTRL+SHIFT+P~, then run ~Go: Install/Update Tools~ to install needed tool
 ****** [[https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer][rust-analyzer]]
 Ref: [[https://rust-analyzer.github.io/manual.html][rust-analyzer's manual]]
 
-rust-analyzer needs the sources of the standard library, which Gentoo
-doesn't provide as a stand-alone package in their official
-repositories. Enable the ~rls~ USE flag of your rust/rust-bin package
-can solve this issue.
+rust-analyzer needs the sources of the standard library, which Gentoo doesn't
+provide as a stand-alone package in their official repositories. Enable the
+~rls~ and ~rust-src~ USE flag of your rust-bin package can solve this issue.
 #+begin_example
   # /etc/portage/package.use
 
   # rust
-  >=dev-lang/rust-bin-1.54.0 ... rls ...  ❸
+  >=dev-lang/rust-bin-1.54.0 ... rls rust-src...  ❸
 #+end_example
 ❸ See [[*Rust]] for the complete USE flags.
 *** MPV & FFmpeg
