@@ -866,6 +866,71 @@ To install ~oracle-jdk-bin~:
 	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease
 	  /var/lib/dhcpcd/dhcpcd-enp4s0.lease6
 #+END_EXAMPLE
+*** Syslog-ng
+Ref: [[https://wiki.gentoo.org/wiki/Syslog-ng][Gentoo::Wiki::Syslog-ng]]
+
+#+begin_example
+  emerge --ask syslog-ng↲
+#+end_example
+
+System wide configuration is in ~/etc/syslog-ng/syslog-ng.conf~:
+#+begin_src emacs-lisp :exports results
+  ;; /etc/syslog-ng/syslog-ng.conf
+  
+  (with-temp-buffer
+    (insert-file-contents "/etc/syslog-ng/syslog-ng.conf")
+    (buffer-string))
+#+end_src
+
+Start ~syslog-ng~ as system service.
+#+begin_example
+  # Add the syslog-ng daemon to the default runlevel so that logging starts on system boot:
+  rc-update add syslog-ng default↲
+  
+  # Start the syslog-ng daemon now:
+  rc-service syslog-ng start
+#+end_example
+*** logrotate
+Ref: [[https://wiki.gentoo.org/wiki/Logrotate][Gentoo::Wiki::logrotate]]
+
+#+begin_example
+  emerge --ask app-admin/logrotate↲
+  
+  # By default, a daily cron job configuration is installed with logrotate
+  # package. Adjust it according to your needs.
+  cat /etc/cron.daily/logrotate↲
+  
+  EXITVALUE=$?
+  if [ $EXITVALUE != 0 ]; then
+      /usr/bin/logger -t logrotate "ALERT exited abnormally with [$EXITVALUE]"
+  fi
+  exit $EXITVALUE
+#+end_example
+
+System wide configuration is in ~/etc/logrotate.conf~:
+#+begin_src emacs-lisp :exports results
+  ;; /etc/logrotate.conf
+  
+  (with-temp-buffer
+    (insert-file-contents "/etc/logrotate.conf")
+    (buffer-string))
+#+end_src
+
+Application specific configurations can be placed here:
+#+begin_example
+  cat /etc/logrotate.d/syslog-ng-custom↲
+  
+  /var/log/daemon.log /var/log/debug.log {
+      delaycompress
+      missingok
+      sharedscripts
+      postrotate
+          /etc/init.d/syslog-ng reload > /dev/null 2>&1 || true
+      endscript
+  }
+#+end_example
+See [[https://linux.die.net/man/8/logrotate][logrotate man page]] for further help.
+
 *** Upgrading GCC
 Reference: [[https://wiki.gentoo.org/wiki/Upgrading_GCC][Gentoo::Wiki::Upgrading GCC]]
 #+begin_example
