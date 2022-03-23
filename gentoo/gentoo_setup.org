@@ -361,8 +361,11 @@ usage, maybe a weekly fstrim is reasonable[fn:2].
 Haswell 4670K's HD4600 belongs to ~i965~.
 #+BEGIN_EXAMPLE
   # make.conf:
-  VIDEO_CARDS="intel i965"
-
+  
+  ## DEPRECATED in mesa-22
+  ## VIDEO_CARDS="intel i965"
+  
+  VIDEO_CARDS="intel"
   emerge --ask --changed-use --deep @world↲
 #+END_EXAMPLE
 Here ~VIDEO_CARDS~ is a ~USE_EXPAND~ flag, which is documented in the
@@ -375,49 +378,66 @@ package containing deps on all xorg drivers.  The ~i965~ value are for
 Prior to ~xorg-drivers 1.19~, ~VIDEO_CARDS="intel i965"~ is the same
 as ~VIDEO_CARDS="intel"~. ~i965~ is added in [[https://github.com/gentoo/gentoo/commit/0f26449868d8412b9629ee3b7cd4ba18427b5b36][COMMIT 0f26449]] and came
 into effect from [[https://github.com/gentoo/gentoo/commit/88e99c24dc6887dce2fda053209b17d0c004aedf][COMMIT 88e99c2]].
+
+Start from ~xorg-drivers 21.1~, according to [[https://github.com/gentoo/gentoo/commit/3c704ad609f4dcb64fd78057aad39e94097a26d8][COMMIT 3c704ad]], ~i965~ is dropped.
+Only ~VIDEO_CARDS="intel"~ is needed and ~xf86-video-intel~ can be safely
+removed from the world set if you DON'T use Intel DDX.
 #+BEGIN_EXAMPLE
   # xorg-drivers-1.18-r1.ebuild
   PDEPEND="
-	  ...
-	  video_cards_intel?         ( x11-drivers/xf86-video-intel )
-	  ...
+    ...
+    video_cards_intel?         ( x11-drivers/xf86-video-intel )
+    ...
   "
-
+  
   # xorg-drivers-1.19.ebuild
   PDEPEND="
-	  ...
-	  video_cards_i915?          ( x11-drivers/xf86-video-intel )
-	  video_cards_i965?          ( >=x11-base/xorg-server-${PV}[glamor] )
-	  video_cards_intel?         ( !video_cards_i965? ( x11-drivers/xf86-video-intel ) )
-	  ...
+    ...
+    video_cards_i915?          ( x11-drivers/xf86-video-intel )
+    video_cards_i965?          ( >=x11-base/xorg-server-${PV}[glamor] )
+    video_cards_intel?         ( !video_cards_i965? ( x11-drivers/xf86-video-intel ) )
+    ...
+  "
+  # xorg-drivers-21.1.ebuild
+  PDEPEND="
+    ...
+    video_cards_i915?          ( x11-drivers/xf86-video-intel )
+    video_cards_intel?         ( >=x11-base/xorg-server-${PV}[-minimal] )
+    ...
   "
 #+END_EXAMPLE
 See [[https://devmanual.gentoo.org/eclass-reference/ebuild/index.html][Ebuild Reference]] for details about ebuild file.
 
 ***** Intel DDX & Modesetting DDX
 #+BEGIN_EXAMPLE
-  Beginning with x11-base/xorg-drivers-1.19, the x11-base/xorg-drivers package (in addition to the mesa package) includes support the i965 USE flag. This will omit selection of the deprecating x11-drivers/xf86-video-intel driver in favor of the more maintained, generic modesetting DDX driver built-in to x11-base/xorg-server.
+  Beginning with x11-base/xorg-drivers-1.19, the x11-base/xorg-drivers package (in
+  addition to the mesa package) includes support the i965 USE flag. This will omit
+  selection of the deprecating x11-drivers/xf86-video-intel driver in favor of the
+  more maintained, generic modesetting DDX driver built-in to
+  x11-base/xorg-server.
 #+END_EXAMPLE
 For staying with Intel DDX:
 #+BEGIN_EXAMPLE
   # make.conf:
-  VIDEO_CARDS="intel"
+  VIDEO_CARDS="intel i915"
 
   emerge -aDN @world↲
 #+END_EXAMPLE
 For switching over to Modesetting DDX:
 #+BEGIN_EXAMPLE
   # make.conf:
-  VIDEO_CARDS="intel i965"
-
-  # package.use, add:
-
-  # required by x11-base/xorg-drivers-1.19::gentoo[video_cards_i965]
-  >=x11-base/xorg-server-1.19.1 glamor
-
+  VIDEO_CARDS="intel"
+  
   emerge --ask --change-use --deep @world↲
+  
+  # package.use, add:  ❶
+  
+  # required by x11-base/xorg-drivers-1.19::gentoo[video_cards_i965]
+  # >=x11-base/xorg-server-1.19.1 glamor
 #+END_EXAMPLE
-The intel DDX driver ~xf86-video-intel~ can be safely unmerged.
+❶ In ~<xorg-server-1.19.5~, you need to manually enable USE flag ~glamor~. After
+[[https://github.com/gentoo/gentoo/commit/10e4c208624c0d5bb6db890fb397f28a8dfbf60a][this commit]], it is enabled by default. In newest ~xorg-server~, this USE flag is
+dropped.
 
 As of [2017-04-19 Wed 09:40], for safe transaction purpose, I keep
 both of the DDX drivers. The config is the same as with modesetting
@@ -427,8 +447,13 @@ one of them as shown below.
 To force Xorg server to use the Intel DDX driver with SNA for hardware
 accelleration:
 #+BEGIN_EXAMPLE
+  FILE: /etc/portage/make.conf
+  
+  VIDEO_CARDS="intel i915"
+  emerge --ask --change-use --deep @world↲
+  
   FILE: /etc/X11/xorg.conf.d/20-intel.conf
-
+  
   # Force Intel DDX
   Section "Device"
       Identifier  "Intel Graphics"
@@ -437,18 +462,18 @@ accelleration:
   EndSection
 #+END_EXAMPLE
 
-To force the modesetting driver:
+As of [2022-03-23 Wed 21:37], Intel has not updated [[https://cgit.freedesktop.org/xorg/driver/xf86-video-intel/log/][xf86-video-intel]] for quite
+some time. The modesetting driver is a more reasonable choise. To force the
+modesetting driver:
 #+BEGIN_EXAMPLE
   FILE: /etc/portage/make.conf
-
-  #Enable glamor globally
-  USE="glamor"
-  VIDEO_CARDS="intel i965"
-
+  
+  VIDEO_CARDS="intel"
+  
   emerge --ask --change-use --deep @world↲
-
+  
   FILE: /etc/X11/xorg.conf.d/20-modesetting.conf
-
+  
   #Force modesetting DDX
   Section "Device"
       Identifier  "Intel Graphics"
@@ -890,7 +915,7 @@ Start ~syslog-ng~ as system service.
   # Start the syslog-ng daemon now:
   rc-service syslog-ng start
 #+end_example
-*** logrotate
+*** Logrotate
 Ref: [[https://wiki.gentoo.org/wiki/Logrotate][Gentoo::Wiki::logrotate]]
 
 #+begin_example
@@ -930,7 +955,74 @@ Application specific configurations can be placed here:
   }
 #+end_example
 See [[https://linux.die.net/man/8/logrotate][logrotate man page]] for further help.
+*** NFS
+Ref: [[https://wiki.gentoo.org/wiki/Nfs-utils][Gentoo::Wiki::Nfs-utils]]
 
+Kernel options:
+#+begin_example
+  Client:
+  
+  KERNEL Enabling NFS client support
+  File systems --->
+    [*] Inotify support for userspace
+    [*] Network File Systems --->
+          <M>   NFS client support
+          < >     NFS client support for NFS version 2
+          < >     NFS client support for NFS version 3
+          <M>     NFS client support for NFS version 4
+                ...
+          [*]   NFS client support for NFSv4.1
+                ...
+          [*]   NFS: Disable NFS UDP protocol support (NEW)
+  
+  Server:
+  
+  KERNEL Enabling NFS server support
+  File systems --->
+    [*] Inotify support for userspace
+    [*] Network File Systems --->
+          <M>   NFS server support
+          [*]     NFS server support for NFS version 3
+                  ...
+          [*]     NFS server support for NFS version 4
+  
+#+end_example
+Then install the needed package ~emerge --ask net-fs/nfs-utils↲~.
+
+How to use NFS:
+#+begin_example
+  Client:
+  
+  # On NFS Server
+  cat /etc/exports↲
+  
+  /export/DATA1 192.168.1.0/24(...)
+  
+  # As 'root'
+  ## To manually start nfsclient
+  rc-service nfsclient start↲
+  
+  ## Or start the nfsclient on boot
+  rc-update add nfsclient default↲
+  
+  ## Mount the remote NFS share
+  mount 192.168.1.100:/DATA1 /PATH/To/LOCAL/MOUNT/POINT↲
+  
+  ## To stop nfsclient
+  /etc/init.d/rpcbind stop↲
+  
+  Server:
+  
+  # As 'root'
+  ## To manually start nfs server
+  rc-service nfs start↲
+  
+  ## To start nfs server on boot
+  rc-update add nfs default↲
+  
+  ## To stop nfs server
+  rc-service rpcbind stop↲
+#+end_example
 *** Upgrading GCC
 Reference: [[https://wiki.gentoo.org/wiki/Upgrading_GCC][Gentoo::Wiki::Upgrading GCC]]
 #+begin_example
