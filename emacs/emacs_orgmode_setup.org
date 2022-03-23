@@ -1010,6 +1010,19 @@ programe.
   StartupWMClass=Emacs
 #+end_example
 Tilde(=~=) expansion will be failed in Icon path.
+
+** Missing icons
+[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] now requires you to install needed fonts manually.
+#+begin_example
+  In order for the icons to work it is very important that you install the
+  Resource Fonts included in this package, they are available in the fonts
+  directory. You can also install the latest fonts for this package in the
+  (guessed?) based on the OS by calling the following function;
+  
+  M-x all-the-icons-install-fonts↲
+#+end_example
+Use [[https://github.com/tallesairan/FA5PRO/tree/fa6][Font Awesome 6 Pro]] to replace the old version ~fontawesome.ttf~.
+
 * Footnotes
 [fn:spacemacs_font] [[https://www.spacemacs.org/doc/DOCUMENTATION.html#font][Spacemacs::Font]] 
 
