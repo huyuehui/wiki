@@ -1,0 +1,624 @@
+#+TITLE: Font Configuration
+#+DATE: [2022-04-04 Mon 20:37]
+#+KEYWORDS: gentoo font
+#+OPTIONS: H:5
+#+SETUPFILE: ../org-templates/level-1.org
+
+*** Font
+**** fontconfig
+Usually fontconfig will be pulled in by other dependencies. If not,
+install it manually. System-wide configuration is shown as below.
+#+begin_example
+  # Config DIR: /etc/fonts/
+  eselect fontconfig list↲
+
+  Available fontconfig .conf files (* is enabled):
+  [1]   10-autohint.conf
+  [2]   10-hinting-full.conf
+  [3]   10-hinting-medium.conf
+  [4]   10-hinting-none.conf
+  [5]   10-hinting-slight.conf *
+  [6]   10-no-sub-pixel.conf
+  [7]   10-scale-bitmap-fonts.conf *
+  [8]   10-sub-pixel-bgr.conf
+  [9]   10-sub-pixel-rgb.conf *
+  [10]  10-sub-pixel-vbgr.conf
+  [11]  10-sub-pixel-vrgb.conf
+  [12]  10-unhinted.conf
+  [13]  11-lcdfilter-default.conf *
+  [14]  11-lcdfilter-legacy.conf
+  [15]  11-lcdfilter-light.conf
+  [16]  20-unhint-small-vera.conf *
+  [17]  25-unhint-nonlatin.conf
+  [18]  30-metric-aliases.conf *
+  [19]  40-nonlatin.conf *
+  [20]  43-wqy-zenhei-sharp.conf
+  [21]  44-wqy-zenhei.conf
+  [22]  45-generic.conf *
+  [23]  45-latin.conf *
+  [24]  49-sansserif.conf *
+  [25]  50-user.conf *
+  [26]  51-local.conf *
+  [27]  60-generic.conf *
+  [28]  60-latin.conf *
+  [29]  60-liberation.conf
+  [30]  65-fonts-persian.conf
+  [31]  65-khmer.conf
+  [32]  65-nonlatin.conf *
+  [33]  69-unifont.conf
+  [34]  70-no-bitmaps.conf
+  [35]  70-yes-bitmaps.conf
+  [36]  80-delicious.conf *
+  [37]  85-wqy-bitmapsong.conf *
+  [38]  90-synthetic.conf *
+#+end_example
+
+#+begin_src emacs-lisp :exports results
+  ;; ~/.config/fontconfig/fonts.conf
+  (with-temp-buffer
+    (insert-file-contents "~/.config/fontconfig/fonts.conf")
+    (buffer-string))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <selectfont>
+    <rejectfont>
+      <glob>/usr/share/fonts/wqy-zenhei/wqy-zenhei.ttc</glob>
+      <glob>/usr/share/fonts/wqy-bitmapfont/wenquanyi_*</glob>
+      <glob>/usr/share/fonts/urw-fonts/*</glob>
+      <glob>/usr/share/fonts/liberation-fonts/*</glob>
+    </rejectfont>
+  </selectfont>
+
+  <match target="scan">
+	  <test name="family"><string>Migu 1M</string></test>
+	  <edit name="charset">
+		  <charset>
+			  <!-- 基本拉丁(ASCII) -->
+			  <range><int>0x0020</int><int>0x007E</int></range>
+			  <!-- 拉丁-1增补 + 拉丁扩展A/B -->
+			  <range><int>0x00A0</int><int>0x0181</int></range>
+			  <int>0x0186</int><int>0x0189</int><int>0x018A</int>
+			  <range><int>0x018E</int><int>0x0194</int></range>
+			  <range><int>0x0198</int><int>0x019B</int></range>
+			  <range><int>0x019D</int><int>0x01A1</int></range>
+			  <range><int>0x01AF</int><int>0x01B1</int></range>
+			  <range><int>0x01B3</int><int>0x01B6</int></range>
+			  <range><int>0x01BF</int><int>0x01E3</int></range>
+			  <range><int>0x01E6</int><int>0x01ED</int></range>
+			  <range><int>0x01EF</int><int>0x01F5</int></range>
+			  <range><int>0x01F7</int><int>0x01FF</int></range>
+			  <range><int>0x0218</int><int>0x021F</int></range>
+			  <range><int>0x0230</int><int>0x0233</int></range>
+			  <int>0x0237</int><int>0x023D</int>
+			  <!-- 国际音标 + 空格调整字母 -->
+			  <range><int>0x0250</int><int>0x02FF</int></range>
+			  <!-- 希腊语 -->
+			  <range><int>0x0372</int><int>0x0375</int></range>
+			  <int>0x037A</int><int>0x037E</int><int>0x038C</int>
+			  <range><int>0x0384</int><int>0x038A</int></range>
+			  <range><int>0x038E</int><int>0x03A1</int></range>
+			  <range><int>0x03A3</int><int>0x03E1</int></range>
+			  <!-- 西里尔语 -->
+			  <range><int>0x0400</int><int>0x045F</int></range>
+			  <int>0x0462</int><int>0x0463</int>
+			  <range><int>0x0472</int><int>0x0475</int></range>
+			  <int>0x0480</int><int>0x0481</int><int>0x0490</int><int>0x0491</int>
+			  <int>0x04AE</int><int>0x04AF</int><int>0x04E8</int><int>0x04E9</int>
+			  <!-- 货币符号 -->
+			  <int>0x20A1</int><range><int>0x20A8</int><int>0x20AC</int></range>
+			  <range><int>0x20AF</int><int>0x20B3</int></range><int>0x20B5</int>
+			  <!-- 字母符号 -->
+			  <int>0x2103</int><int>0x2113</int><int>0x2116</int><int>0x211E</int>
+			  <int>0x2121</int><int>0x2122</int><int>0x2126</int><int>0x2127</int>
+			  <!-- 数字形式(罗马) -->
+			  <range><int>0x2160</int><int>0x216B</int></range>
+			  <range><int>0x2170</int><int>0x217B</int></range>
+			  <!-- 箭头 -->
+			  <range><int>0x2190</int><int>0x2199</int></range>
+			  <range><int>0x21B0</int><int>0x21B5</int></range>
+			  <range><int>0x21C4</int><int>0x21CA</int></range>
+			  <range><int>0x21D0</int><int>0x21D9</int></range>
+			  <range><int>0x21E4</int><int>0x21ED</int></range>
+			  <!-- 控制图片 -->
+			  <range><int>0x2400</int><int>0x2426</int></range>
+			  <!-- 带圈的字母与数字 -->
+			  <range><int>0x2460</int><int>0x2473</int></range>
+			  <range><int>0x24D0</int><int>0x24FF</int></range>
+			  <range><int>0x2776</int><int>0x2793</int></range>
+			  <!-- 数学乘号 + 拉丁扩展C -->
+			  <int>0x2A2F</int><int>0x2C71</int><int>0x2C7D</int>
+			  <!-- 平假名 + 片假名 + 片假名语音扩展 -->
+			  <range><int>0x3041</int><int>0x3096</int></range>
+			  <range><int>0x3099</int><int>0x30FF</int></range>
+			  <range><int>0x31F0</int><int>0x31FF</int></range>
+			  <!-- 拉丁扩展D -->
+			  <int>0xA78B</int><int>0xA78C</int>
+			  <!-- 拉丁组合字 -->
+			  <range><int>0xFB00</int><int>0xFB04</int></range>
+			  <!-- 字节顺序标记 -->
+			  <int>0xFEFF</int>
+		  </charset>
+	  </edit>
+  </match> 
+
+  <!-- Default serif font -->
+  <alias binding="strong">
+    <family>serif</family>
+    <prefer>
+      <family>Noto Serif</family>
+    </prefer>
+    <accept>
+      <family>Noto Serif CJK SC</family>
+    </accept>
+  </alias>
+
+  <!-- Default sans-serif font -->
+  <alias binding="strong">
+    <family>sans-serif</family>
+    <prefer>
+      <family>Inter</family>
+    </prefer>
+    <accept>
+      <family>Noto Sans CJK SC</family>
+    </accept>
+  </alias>
+
+  <match target="font">
+    <test name="family" compare="eq">
+      <string>Inter</string>
+    </test>
+    <edit name="fontfeatures" mode="append">
+      <string>ss02 on</string>
+    </edit>
+  </match>
+
+  <!-- Default monospace font -->
+  <alias binding="strong">
+    <family>monospace</family>
+    <prefer>
+      <family>Migu 1MS</family>
+    </prefer>
+    <accept>
+      <family>Noto Sans Mono CJK SC</family>
+    </accept>
+  </alias>
+
+  <!-- Default system-ui font -->
+  <!--
+  <alias>
+    <family>system-ui</family>
+    <prefer>
+      <family>Segoe UI Symbol</family>
+    </prefer>
+  </alias>
+  -->
+
+  <match target="pattern">
+    <test qual="any" name="lang" compare="eq">
+      <string>zh-HK</string>
+    </test>
+    <test qual="any" name="family" compare="eq">
+      <string>sans-serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="strong">
+      <string>Chiron Hei HK VF</string>
+    </edit>
+  </match>
+
+  <!-- zh-Hant or zh-Hant-HK or zh-Hant-TW -->
+  <match target="pattern">
+    <test qual="any" name="lang" compare="contains">
+      <string>zh-Hant</string>
+    </test>
+    <test qual="any" name="family" compare="eq">
+      <string>sans-serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="strong">
+      <string>Chiron Hei HK VF</string>
+    </edit>
+  </match>
+
+  <match target="pattern">
+    <test qual="any" name="lang" compare="eq">
+      <string>yue</string>
+    </test>
+    <test qual="any" name="family" compare="eq">
+      <string>sans-serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="same">
+      <string>Chiron Hei HK VF</string>
+    </edit>
+  </match>
+
+  <match target="pattern">
+    <test qual="any" name="lang" compare="eq">
+      <string>zh-TW</string>
+    </test>
+    <test qual="any" name="family" compare="eq">
+      <string>sans-serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="strong">
+      <string>Chiron Hei HK VF</string>
+    </edit>
+  </match>
+
+  <!-- Misc Settings -->
+  <!--
+  <match>
+    <edit name="dpi">
+      <double>96</double>
+    </edit>
+  </match>
+  -->
+
+  <!-- ❶ Render Settings -->
+  <match target="font">
+    <edit name="antialias" mode="assign">
+      <bool>true</bool>
+    </edit>
+    <!-- <edit name="hintstyle" mode="assign">
+      <const>hintslight</const>
+    </edit> -->
+  </match>
+
+</fontconfig>
+#+end_example
+❶ Use rgb sub-pixel ordering to improve glyph appearance on LCD
+screens.  Changes affecting rendering, but not matching should always
+use ~target="font"~.
+**** Font Selection
+[[http://www.jinbuguo.com/gui/linux_fontconfig.html][Linux字体美化实战(Fontconfig配置)]], which is written by 金步国, is a
+wonderful guide for Fontconfig beginners. But nowadays it has some
+drawbacks.
+
+First, it counts on the Fontconfig's ~charset~ property to shadow the
+characters each of which has different display glyphs mapped to the
+same unicode code point. Unfortunately, some applications just ignore
+this property, such as ~Alacritty~[fn:1] and ~Google Chrome~.
+
+The second, it mandates the use of regional-specific fonts to avoid
+the ~locl~ OpenType feature that can be used in multi-lingual markup
+documents to display characters based on contextual language
+environment.
+#+begin_example
+  需要提醒的是，不要使用"NotoSansCJK"，因为需要解决'locl'问题(如果有谁解
+  决了这个问题请告诉我)。
+#+end_example
+
+To test if applications and other text-handling environments support the ~locl~
+GSUB feature and language tagging, refer to [[https://github.com/adobe-fonts/locl-test][locl-test]] for details. Here is a
+slightly modified version of the ~locl-test.html~ file:
+#+begin_src emacs-lisp :exports both :results html
+  (print
+   "
+    <style>
+      span.locl-test {
+        font-family: \"Migu 1M\";
+        font-size: 48px;
+        text-rendering: optimizeLegibility;
+      }
+    </style>
+  
+    <span lang=\"ja-JP\" class=\"locl-test\">ja-JP&#x904D;</span>
+    <span lang=\"ko-KR\" class=\"locl-test\">ko-KR&#x904D;</span>
+    <span lang=\"zh-CN\" class=\"locl-test\">zh-CN&#x904D;</span>
+    <span lang=\"zh-TW\" class=\"locl-test\">zh-TW&#x904D;</span>
+    <span lang=\"zh-HK\" class=\"locl-test\">zh-HK&#x904D;</span>
+  
+   ")
+#+end_src
+Specify ~font-family~ with the family name of your testing font. If you see the
+same glyph shows for different languages, then either the font doesn't support
+the ~locl~ GSUB feature or the browser ignores language tagging.
+
+| Target           | Selected        | Alternation            | Han script & Fallback    |
+|------------------+-----------------+------------------------+--------------------------|
+| Westen Monospace | [[http://mix-mplus-ipa.osdn.jp/migu/][Migu 1M]]         | ① [[https://github.com/naver/nanumfont/releases][NanumGothicCoding]]   | ④ [[https://github.com/googlefonts/noto-cjk/tree/main/Sans/Mono][Noto Sans Mono CJK SC]] |
+|                  |                 | ② [[https://github.com/be5invis/Iosevka][Iosevka Fixed SS06]]  |                          |
+|------------------+-----------------+------------------------+--------------------------|
+| Westen Sans      | [[https://github.com/rsms/inter/][Inter]]           | [[https://github.com/googlefonts/noto-fonts/tree/main/hinted/ttf/NotoSans][Noto Sans]]              | ④ [[https://github.com/googlefonts/noto-cjk/tree/main/Sans][Noto Sans CJK SC]]      |
+|                  |                 |                        | ④ [[https://github.com/chiron-fonts/chiron-hei-hk][Chiron Hei HK]]         |
+|------------------+-----------------+------------------------+--------------------------|
+| Westen Serif     | [[https://github.com/googlefonts/noto-fonts/tree/main/hinted/ttf/NotoSerif][Noto Serif]]      |                        | ④ [[https://github.com/googlefonts/noto-cjk/tree/main/Serif][Noto Serif CJK SC]]     |
+|------------------+-----------------+------------------------+--------------------------|
+| Symbols          | Segoe UI Symbol | ③ [[https://github.com/googlefonts/noto-fonts/tree/master/hinted/ttf/NotoSansSymbols][Noto Sans Symbols]]   |                          |
+|                  | all-the-icons   | ③ [[https://github.com/googlefonts/noto-fonts/tree/master/hinted/ttf/NotoSansSymbols2][Noto Sans Symbols 2]] |                          |
+
+① NanumGothicCoding
+
+Cons:
+- Covers 'Hangul Syllables' code block that we don't need.
+- Some glyphs don't look as good as ~Migu 1M~. e.g. 'g'
+
+② Iosevka SS06
+
+#+begin_example
+  Default:
+  The default variant with ligatures. Various symbols, like arrows and geometric,
+  are wide (2-column).
+  
+  Terminal (“Term”)：
+  A narrower variant focusing terminal uses. Arrows and geometric symbols will be
+  narrow to follow typical terminal usages.
+  
+  Fixed:
+  Exact monospace font without ligatures and wide glyphs. Since some environments
+  cannot interpret Iosevka or Iosevka Term as monospace, and have difficulties
+  with ligatures included, you can use Iosevka Fixed as an alternative.
+#+end_example
+Cons:
+- For ~Terminal~ & ~Fixed~ variants, symbols are half width. e.g. '❶', '✔'
+- For ~Default~ variant, ligatures looks not good, especially on web pages.
+- Line spacing and character spacing are wider than the other 2 fonts.
+
+③ Noto Sans Symbols & Noto Sans Symbols 2
+
+Cons:
+- Covers NOT as widely as ~Segoe UI Symbol~
+
+④
+
+As of [2022-04-03 Sun], variable version of these fonts looks more blurry in
+Gentoo than the same fonts in otf/ttf format. We should avoid to use variable
+fonts. Freetype's ~cleartype-hinting~ doesn't work on variable fonts?
+
+***** Migu 1M
+~migu-1m{regular,bold}.ttf~
+
+Being a japanese font and without ~locl~ GSUB feature support, when displaying
+Han scripts, the japanese version of glyphs will be showed. In order not to
+supercede the fallback to 'CJK SC' like font, we will use a trimmed version of
+~Migu 1M~.
+
+Refs:
+[[https://www.unicode.org/versions/Unicode14.0.0/ch18.pdf][Unicode 14.0.0::Ch18::East Asia]] & [[https://www.unicode.org/charts/][Unicode 14.0 Character Code Charts]]
+
+Unicode code blocks related to Han script:
++ CJK Unified Ideographs (U+4E00 - U+9FFC)  ✔
++ CJK Unified Ideographs Extension A (U+3400 - U+4DBF)  ✔
++ CJK Unified Ideographs Extension B (U+20000 - U+2A6DF)  ✔
++ CJK Unified Ideographs Extension C, D, E, F, G
++ CJK Compatibility Ideographs (U+F900 - U+FAFF)  ✔
++ CJK Compatibility Ideographs Supplement (U+2F800 - U+2FA1F)
++ Kanbun (U+3190 - U+319f)
++ Enclosed CJK Letters and Months (U+3200 - U+32FF)  ✔
++ CJK Compatibility (U+3300 - U+33FF)  ✔
++ Enclosed Ideographic Supplement (U+1F200 - U+1F2FF)
++ CJK Radicals / Kangxi Radicals (U+2E80 - U+2FDF)  ✔
++ CJK Strokes (U+31C0 - U+31EF)
++ Ideographic Symbols and Punctuation (U+16FE0 - U+16FFF)
+Seven code blocks labeled with ~✔~ exist in ~Migu 1M~. Remove them as showed bellow.
+
+Create a FontForge script, which is for example named ~trim-migu.script~.
+#+begin_example
+  #!/usr/bin/fontforge
+  
+  SelectNone()
+  
+  /* CJK Unified Ideographs (9576/20976) */
+  SelectMore(0u4E00, 0u9FFC)
+  
+  /* CJK Unified Ideographs Extension A (165/6582) */
+  SelectMore(0u3400, 0u4DBF)
+  
+  /* CJK Unified Ideographs Extension B (305/42711) */
+  SelectMore(0u20000, 0u2A6DF)
+  
+  /* CJK Compatibility Ideographs (98/472) */
+  SelectMore(0uF900, 0uFAFF)
+  
+  /* Enclosed CJK Letters and Months (63/255) */
+  SelectMore(0u3200, 0u32FF)
+  
+  /* CJK Compatibility (37/256) */
+  SelectMore(0u3300, 0u33FF)
+  
+  /* CJK Radicals / Kangxi Radicals */
+  SelectMore(0u2E80, 0u2FDF)
+#+end_example
+In FontForge, follow these steps:
+#+begin_example
+  fontforge migu-1m-regular.ttf↲
+  
+  Fontforge
+    -> File
+       -> Execute Script...
+          ⦿ FF
+             'Call...'↲
+             Navigate to the script you create above. 'OK'↲
+          'OK'↲
+  
+    -> Encoding
+       -> Detach & Remove Glyphs...
+          'Remove'↲
+  
+    -> Element
+       -> Font Info...
+          -> PS Names
+             Fontname:        migu-1ms-regular
+             Family Name:     Migu 1MS
+             Name For Humans: Migu 1MS Regular
+  
+          -> TTF Names
+             Japanese | Family   | Migu 1MS
+             Japanese | Fullname | Migu 1MS Regular
+       'OK'↲
+       "...would you like me to generate a random new value?"
+          'Change'↲
+  
+    -> File
+       -> Generate Fonts...
+          migu-1ms-regular.ttf
+          True Type ⌵    No Bitmap Fonts ⌵
+          'Options'
+            -> SFNT
+               ☑ TrueType Hints
+               ☑ PS Glyph Names
+               ☑ OpenType
+               ☑ FFTM Table
+          Force Glyph names to:  No Rename ⌵ 
+          ☐ Validate Before Saving  ❶
+  
+       'Generate'↲
+       "The convention is that TrueType fonts should have an Em-Size which is a power of 2..."
+         'Yes'↲
+  
+  # Ensure the new font file 'migu-1ms-regular.ttf' is generated.
+  # Discard the '.sfd' file changed message. Click "Don't Save".
+#+end_example
+❶ If checked, you will get lots of error messages. As for now, just ignore them.
+
+Apply the same steps to get ~migu-1ms-bold.ttf~.
+***** Inter
+[[https://github.com/rsms/inter/][Inter]] features a tall x-height to aid in readability of mixed-case and
+lower-case text. See [[https://rsms.me/inter/][Inter/doc]] for instroduction. Several OpenType features like
+~calt~, ~ccmp~ and ~kern~, which are default 'enabled'[fn:2], as well as other
+associated features[fn:3], can be manipulated as shown below:
+#+begin_src emacs-lisp :exports both :results html
+  (print
+   "
+    <style>
+      span.inter_calt_on {
+        font-family: Inter;
+      }
+      span.inter_calt_off {
+        font-family: Inter;
+        font-variant-ligatures: no-contextual;
+        /* font-feature-settings: 'calt' 0; ❶*/
+      }
+      span.notosans {
+        font-family: Noto Sans;
+      }
+      span.disambiguation {
+        font-family: Inter;
+        font-feature-settings: 'ss02';
+      }
+      th, td {
+        padding-left: 20px;
+        padding-right: 20px;
+        border: 1px solid black;
+      }
+    </style>
+  
+    <p>
+    With your browser's current settings: M@N 12:34 9*8 0x0961 IlOo0
+    </p>
+  
+    <table>
+      <tr>
+        <th rowspan=\"2\">Font</th>
+        <th colspan=\"2\">OpenType Feature</th>
+        <th rowspan=\"2\">example</th>
+      </tr>
+      <tr>
+        <td>calt</td>
+        <td>stylistic sets</td>
+      </tr>
+      <tr>
+        <td>Inter</td>
+        <td>default=enable ❷</td>
+        <td>default=disable</td>
+        <td><span class=\"inter_calt_on\">M@N 12:34 9*8 0x0961 IlOo0</span></td>
+      </tr>
+      <tr>
+        <td>Inter</td>
+        <td>disable</td>
+        <td>default=disable</td>
+        <td><span class=\"inter_calt_off\">M@N 12:34 9*8 0x0961 IlOo0</span></td>
+      </tr>
+      <tr>
+        <td>Inter</td>
+        <td>default=enable</td>
+        <td>ss02</td>
+        <td><span class=\"disambiguation\">M@N 12:34 9*8 0x0961 IlOo0</span></td>
+      </tr>
+      <tr>
+        <td>Noto Sans</td>
+        <td>default=disable</td>
+        <td>default=disable</td>
+        <td><span class=\"notosans\">M@N 12:34 9*8 0x0961 IlOo0</span></td>
+      </tr>
+    </table>
+  
+  ")
+#+end_src
+❶ In this [[https://www.w3.org/TR/css-fonts-4/#font-feature-settings-prop][w3c working draft]], it recommands:
+#+begin_quote
+Authors should generally use font-variant and its related subproperties whenever
+possible and only use this property for special cases where its use is the only
+way of accessing a particular infrequently used font feature.
+#+end_quote
+
+❷ In some cases, with ~calt~ enabled by default results that you can't type
+hexdecimal strings with ~0x~ prefix. See [[https://github.com/rsms/inter/issues/404][this issue]] for details.
+
+To enable opentype features for a font:
+#+begin_example
+  # ~/.config/fontconfig/fonts.conf
+  
+  <match target="font">
+    <test name="family" compare="eq">
+      <string>Inter</string>
+    </test>
+    <edit name="fontfeatures" mode="append">
+      <string>ss02 on</string>
+    </edit>
+  </match>
+#+end_example
+In my system only a few applications respect this setting, such as ~pango-view~
+and ~fontforge~. Unfortunately, many applications either ignore this setting or
+configure OpenType features via their own mechenisms, such as Chrome & Firefox.
+
+For Firefox, according to this [[https://support.mozilla.org/en-US/questions/1274586?page=2][post]] and [[http://kb.mozillazine.org/UserContent.css][userContent.css]], try the following
+steps:
+#+begin_example
+  Firefox
+    -> Help
+       -> More troubleshooting Information
+          Profile Directory: /../.mozilla/firefox/rv2ufklz.default-release
+  
+  # Your Profile Directory's name might look different.
+  cd ~/.mozilla/firefox/rv2ufklz.default-release↲
+  mkdir chrome↲
+  cd chrome↲
+  
+  # Create userContent.css
+  cat <<EOF > userContent.css↲
+  @font-feature-values Inter {
+    @styleset {
+      Disambiguation: 2;
+    }
+  }
+  
+  ,* {
+    font-variant-alternates: styleset(Disambiguation);
+  }
+  EOF
+#+end_example
+***** 昭源黑體 Chiron Hei HK
+See [[https://chiron-fonts.github.io/][昭源字體]] for details. It is used specifically for showing Traditional
+Chinese glyphs.
+***** Symbols
+****** Segoe UI Symbol
+Copyed from MS Windows, named ~seguisym.ttf~ in ~Windows\Fonts~.
+****** all-the-icons
+See [[file:~/work/wiki/org/emacs/emacs_orgmode_setup.org::*Missing icons][Missing icons]] for details. These fonts are used as supplementary resources
+for ~Segoe UI Symbol~, especially in *Spacemacs*.
+
+* Footnotes
+[fn:3] Consult the following documents for further details.
++ [[https://www.w3.org/TR/css-fonts-4/][CSS Fonts Module Level 4]]
++ [[https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Fonts/OpenType_fonts_guide][OpenType font features guide]]
++ [[https://helpx.adobe.com/fonts/using/open-type-syntax.html][Syntax for OpenType features in CSS]]
+
+[fn:2] You can explore features in the [[https://rsms.me/inter/lab/][interactive lab]].
+
+[fn:1]
++ [[https://github.com/alacritty/crossfont/issues/30][Primary font ignores the fontconfig's charset property.]]
++ [[https://github.com/alacritty/alacritty/issues/5351][[Feature request] Does alacritty ignore fontconfig's charset property?]] 
+

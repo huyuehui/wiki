@@ -749,7 +749,8 @@ A list of L10N values that can be used is provided as
 ~/etc/portage/package.use~ and prefix the requested language packs
 with ~l10n_~[fn:7].
 
-**** TODO Font
+**** Font
+See [[file:font.org][Font]] for further information.  
 *** Wayland
 #+begin_example
   # Enable "wayland" USE flag globally
