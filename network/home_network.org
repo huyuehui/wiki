@@ -66,33 +66,48 @@ The seller has pre-configured sa1456c with a *Bridged* internet WAN, a *Routing*
 A new sa1456c, which has *NOT* been authenticated to Beijing ChinaUnicom, can be authenticated via web GUI:
 #+BEGIN_EXAMPLE
   系统工具
-	  -> ONT认证
-	     -> 认证方式 :
-		这里选择以自定义MAC地址向北京联通进行认证
-
+    -> ONT认证
+       -> 认证方式 :
+    这里选择以自定义MAC地址向北京联通进行认证
+  
   NOTE：
-
+  
   据说，北京联通EPON是MAC认证。如果光猫以前没有认证过，才会有使用MAC地址
   认证的选项。如果以前认证过，认证方式只能选择“逻辑标识认证”和“华为
   KEY认证”。我买的这只sa1456c由于通电时连着光纤，忘记先修改为rg200O的
   MAC地址，导致光猫自动以自身MAC地址向联通认证，GUI里以自定义MAC认证的选
   项消失，只能用手动方式认证，如下所示：
-
+  
   安全
-	  -> 设备访问控制配置
-	     -> LAN服务
-		-> 使能LAN侧PC通过SSH访问设备 : ✔
-
-  $ssh root@192.168.100.1↲
+    -> 设备访问控制配置
+       -> LAN服务
+    -> 使能LAN侧PC通过SSH访问设备 : ✔
+  
+  $ssh root@192.168.100.1↲  ❶
   root@192.168.100.1's password:*...*↲
   WAP>su↲
   SU_WAP>?  <-- Show available commands
   SU_WAP>set productmac MAC AA:BB:CC:DD↲
-
+  
   success!
   SU_WAP>quit↲
   WAP>quit↲
   $
+  
+  
+  ❶
+  # If you get the following error:
+  
+  Unable to negotiate with 192.168.100.1 port 22: no matching host key type found. Their offer: ssh-rsa
+  
+  # Try this:
+  ssh -o HostKeyAlgorithms=+ssh-rsa root@192.168.100.1↲
+  
+  # Or you can add these to ~/.ssh/config
+  
+  Host 192.168.100.1
+    User root
+    HostkeyAlgorithms +ssh-rsa
 #+END_EXAMPLE
 
 **** Configure sa1456c
